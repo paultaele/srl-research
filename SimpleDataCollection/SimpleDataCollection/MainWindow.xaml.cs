@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Ink;
 using System.Windows.Input;
+using Srl.Tools;
 using Srl.Xml;
 
 namespace SimpleDataCollection
@@ -96,7 +97,7 @@ namespace SimpleDataCollection
 
             // add stroke to the list
             Stroke stroke = new Stroke(myPoints);
-            stroke.AddPropertyData(SketchXmlProcessor.TIMES_GUID, myTimes.ToArray());
+            stroke.AddPropertyData(SketchTools.TIMES_GUID, myTimes.ToArray());
             myStrokes.Add(stroke);
         }
 
@@ -163,7 +164,7 @@ namespace SimpleDataCollection
 
             // add the stroke to the list
             Stroke stroke = new Stroke(myPoints);
-            stroke.AddPropertyData(SketchXmlProcessor.TIMES_GUID, myTimes.ToArray());
+            stroke.AddPropertyData(SketchTools.TIMES_GUID, myTimes.ToArray());
             myStrokes.Add(stroke);
         }
 
