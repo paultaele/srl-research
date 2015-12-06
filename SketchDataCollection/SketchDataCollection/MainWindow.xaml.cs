@@ -46,5 +46,30 @@ namespace SketchDataCollection
         }
 
         #endregion
+
+        private void MySettingsOkButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void MySettingsCancelButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void MySaveDirectoryButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void MyRectangularAreaButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void MySquareAreaButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }

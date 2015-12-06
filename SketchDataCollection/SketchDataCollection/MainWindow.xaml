@@ -12,7 +12,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         
-        <Menu Grid.Row="0" Panel.ZIndex="1">
+        <Menu Name="MyMenu" Grid.Row="0" Panel.ZIndex="1">
             <MenuItem Header="_File">
                 <MenuItem Header="_Load..." Name="MyLoadMenu" Click="MyLoadMenu_Click"/>
             </MenuItem>
@@ -45,20 +45,66 @@
             <Border BorderBrush="Black" BorderThickness="10" Padding="10">
                 <StackPanel>
 
+                    <StackPanel>
+                        <TextBlock FontSize="20" FontWeight="Bold" Margin="5">Data Collection Settings</TextBlock>
+                    </StackPanel>
+
+                    <StackPanel Margin="10" />
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                        <TextBox Width="25" FontSize="16" Margin="5"></TextBox>
+                        <TextBlock Name="MyUserNumberBox"  FontSize="16" Margin="5">User Number</TextBlock>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                        <TextBox Width="25" FontSize="16" Margin="5"></TextBox>
+                        <TextBlock Name="MyIterationCountBox" FontSize="16" Margin="5">Iteration Count</TextBlock>
+                    </StackPanel>
+                    
+                    <Separator Margin="5" />
+
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                         <CheckBox Margin="5"></CheckBox>
-                        <TextBlock Margin="5">Line 1</TextBlock>
+                        <TextBlock Name="MyPreviewImageCheckBox" FontSize="16" Margin="5">Show preview image?</TextBlock>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                         <CheckBox Margin="5"></CheckBox>
-                        <TextBlock Margin="5">Line 2</TextBlock>
+                        <TextBlock Name="MyTraceImageCheckBox" FontSize="16" Margin="5">Show trace image?</TextBlock>
                     </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                        <CheckBox Margin="5"></CheckBox>
+                        <TextBlock Name="MyRandomizePromptsCheckBox" FontSize="16" Margin="5">Randomize prompts?</TextBlock>
+                    </StackPanel>
+
+                    <Separator />
+
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
+                        <TextBlock FontSize="16" Margin="5">Writing Area:</TextBlock>
+                        <StackPanel Orientation="Vertical">
+                            <RadioButton GroupName="WritingArea" Name="MyRectangularAreaButton" Click="MyRectangularAreaButton_Click"  FontSize="16" Margin="5">Rectangular</RadioButton>
+                            <RadioButton GroupName="WritingArea" Name="MySquareAreaButton" Click="MySquareAreaButton_Click"  FontSize="16" Margin="5">Square</RadioButton>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <Separator />
+
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
+                        <TextBlock FontSize="16" Margin="5">Save Directory:</TextBlock>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                            <Button Name="MySaveDirectoryButton" Click="MySaveDirectoryButton_Click"  Width="25" FontSize="16" Margin="5">...</Button>
+                            <TextBox Name="MySaveDirectoryBox"  Width="300" FontSize="16" Margin="5"></TextBox>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Margin="10" />
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Name="MySettingsOkButton" Width="50" Margin="5">OK</Button>
-                        <Button Name="MySettingsCancelButton" Width="50" Margin="5">Cancel</Button>
+                        <Button Name="MySettingsOkButton" Click="MySettingsOkButton_Click"  Width="75" FontSize="16" Margin="5">OK</Button>
+                        <Button Name="MySettingsCancelButton" Click="MySettingsCancelButton_Click" Width="75" FontSize="16" Margin="5">Cancel</Button>
                     </StackPanel>
+
                 </StackPanel>    
             </Border>            
         </StackPanel>
