@@ -1,17 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Ookii.Dialogs.Wpf;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace SketchDataCollection
 {
@@ -20,6 +9,8 @@ namespace SketchDataCollection
     /// </summary>
     public partial class MainWindow : Window
     {
+        #region Constructor and Loader
+
         public MainWindow()
         {
             InitializeComponent();
@@ -33,5 +24,27 @@ namespace SketchDataCollection
         {
 
         }
+
+        #endregion
+
+        #region Menu Interactions
+
+        private void MyLoadMenu_Click(object sender, RoutedEventArgs e)
+        {
+            // display the folder browser dialog
+            var dialog = new VistaFolderBrowserDialog();
+            if (!dialog.ShowDialog().Value)
+            {
+                return;
+            }
+
+            // get the images directory path
+            string dirPath = dialog.SelectedPath;
+
+            //
+            MySettingsPanel.Visibility = Visibility.Visible;
+        }
+
+        #endregion
     }
 }

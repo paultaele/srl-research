@@ -12,13 +12,13 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         
-        <Menu Grid.Row="0">
+        <Menu Grid.Row="0" Panel.ZIndex="1">
             <MenuItem Header="_File">
-                <MenuItem Header="_Load..."/>
+                <MenuItem Header="_Load..." Name="MyLoadMenu" Click="MyLoadMenu_Click"/>
             </MenuItem>
         </Menu>
-        
-        <Grid Grid.Row="1">
+
+        <Grid Grid.Row="1" Panel.ZIndex="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="2* "/>
                 <RowDefinition Height="7* "/>
@@ -38,5 +38,31 @@
             </Grid>
             
         </Grid>
+
+        <StackPanel Name="MySettingsPanel" Grid.Row="0" Grid.RowSpan="2" Panel.ZIndex="2"
+                VerticalAlignment="Center" HorizontalAlignment="Center"
+                Background="White" Visibility="Visible">
+            <Border BorderBrush="Black" BorderThickness="10" Padding="10">
+                <StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                        <CheckBox Margin="5"></CheckBox>
+                        <TextBlock Margin="5">Line 1</TextBlock>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                        <CheckBox Margin="5"></CheckBox>
+                        <TextBlock Margin="5">Line 2</TextBlock>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Name="MySettingsOkButton" Width="50" Margin="5">OK</Button>
+                        <Button Name="MySettingsCancelButton" Width="50" Margin="5">Cancel</Button>
+                    </StackPanel>
+                </StackPanel>    
+            </Border>            
+        </StackPanel>
+
+
     </Grid>
 </Window>
