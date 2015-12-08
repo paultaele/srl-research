@@ -352,7 +352,6 @@ namespace SketchDataCollection
                 //
                 double canvasWidth = MyCanvasBorder.Width;
                 double canvasHeight = MyCanvasBorder.Height;
-                Console.WriteLine("2: " + MyCanvasBorder.Width + " x " + MyCanvasBorder.Height);
                 double scaleFactor = ScaleFactor(canvasWidth, canvasHeight, imageWidth, imageHeight);
 
                 //
