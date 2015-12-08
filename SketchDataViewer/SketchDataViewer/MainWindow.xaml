@@ -1,0 +1,81 @@
+﻿<Window x:Class="SketchDataViewer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SketchDataViewer"
+        mc:Ignorable="d"
+        Title="MainWindow" Name="MyWindow" Loaded="MyWindow_Loaded">
+    <Grid>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Menu Grid.Row="0">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Load..." Name="MyLoadMenu" Click="MyLoadMenu_Click" />
+            </MenuItem>
+        </Menu>
+        
+        <Grid Grid.Row="1" Background="Gray">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="7*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Transform Controls -->
+            <StackPanel Grid.Column="0" Margin="10">
+                <CheckBox Name="MyResampleButton" Click="MyResampleButton_Click"  IsEnabled="False" FontSize="20" FontWeight="Bold" Margin="10">Resample</CheckBox>
+                <Slider Name="MyResampleSlider" PreviewMouseUp="MyResampleSlider_PreviewMouseUp" IsEnabled="False" Foreground="White" Maximum="4" TickPlacement="BottomRight" TickFrequency="1" IsSnapToTickEnabled="True" Margin="30,0,30,0"></Slider>
+                <CheckBox Name="MyScaleButton" Click="MyScaleButton_Click"  IsEnabled="False" FontSize="20" FontWeight="Bold" Margin="10">Scale</CheckBox>
+                <Slider Name="MyScaleSlider" PreviewMouseUp="MyScaleSlider_PreviewMouseUp" IsEnabled="False" Foreground="White" Maximum="3" TickPlacement="BottomRight" TickFrequency="1" IsSnapToTickEnabled="True" Margin="30,0,30,0"></Slider>
+                <CheckBox Name="MyTranslateButton" Click="MyTranslateButton_Click" IsEnabled="False" FontSize="20" FontWeight="Bold" Margin="10">Translate</CheckBox>
+
+                <Separator Margin="50,10,50,10"  Background="Black" />
+                
+                <CheckBox Name="MyDisplayPointsButton" Click="MyDisplayPointsButton_Click"  IsEnabled="False" FontSize="20" FontWeight="Bold" Margin="10">Display Points</CheckBox>
+            </StackPanel>
+
+            <!-- View Controls -->
+            <Grid Grid.Column="1" Background="Gray">
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="8*" />
+                    <RowDefinition Height="2*" />
+                </Grid.RowDefinitions>
+                
+                <!-- Viewing Display -->
+                <Grid Grid.Row="0">
+                    <Border BorderBrush="Black" BorderThickness="10" Margin="10">
+                        <InkCanvas Name="MyCanvas" IsEnabled="False">
+                            <!--<InkCanvas.DefaultDrawingAttributes>
+                                <DrawingAttributes Width="3" Height="3" Color="Black" />
+                            </InkCanvas.DefaultDrawingAttributes>-->
+                        </InkCanvas>
+                    </Border>
+                </Grid>
+                
+                <!-- Editing Buttons -->
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="5*" />
+                        <ColumnDefinition Width="5*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Grid.Column="0">
+                        <Button Name="MyPrevButton" IsEnabled="False" HorizontalAlignment="Left" VerticalAlignment="Center" Width="50" Height="50" Margin="20" FontSize="24">◀</Button>
+                    </Grid>
+
+                    <Grid Grid.Column="1">
+                        <Button Name="MyNextButton" IsEnabled="False" HorizontalAlignment="Right" VerticalAlignment="Center" Width="50" Height="50" Margin="20" FontSize="24">▶</Button>
+                    </Grid>
+
+                </Grid>
+
+            </Grid>
+        </Grid>
+
+    </Grid>
+</Window>
