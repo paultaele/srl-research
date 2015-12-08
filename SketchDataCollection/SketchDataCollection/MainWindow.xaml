@@ -18,30 +18,58 @@
             </MenuItem>
         </Menu>
 
-        <Grid Grid.Row="1" Panel.ZIndex="1">
+        <Grid Grid.Row="1" Background="Gray" Panel.ZIndex="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="2* "/>
                 <RowDefinition Height="7* "/>
                 <RowDefinition Height="1*" />
             </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="0" Orientation="Horizontal" Background="Green">
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Background="Gray">
+                <Grid Name="MyPreviewImageControl">
+                    <Image Name="MyPreviewImage"/>
+                </Grid>
+                <StackPanel Margin="20">
+                    <TextBlock Name="MyInstructionDisplay" FontSize="24" FontWeight="Bold" Visibility="Hidden">Please draw:</TextBlock>
+                    <TextBlock Name="MyLabelDisplay" FontSize="36" FontStyle="Italic"></TextBlock>
+                </StackPanel>
                 
             </StackPanel>
 
-            <Grid Grid.Row="1" Background="Blue">
-                
+            <Grid Grid.Row="1" Background="Gray">
+                <Border Name="MyCanvasBorder" BorderThickness="5" BorderBrush="Black" Margin="20" Visibility="Hidden">
+                    <InkCanvas Name="MyCanvas" StylusMove="MyCanvas_StylusMove" StylusButtonDown="MyCanvas_StylusButtonDown" StylusButtonUp="MyCanvas_StylusButtonUp"
+                           PreviewMouseMove="MyCanvas_PreviewMouseMove" PreviewMouseDown="MyCanvas_PreviewMouseDown" PreviewMouseUp="MyCanvas_PreviewMouseUp">
+                        <InkCanvas.DefaultDrawingAttributes>
+                            <DrawingAttributes Width="5" Height="5" Color="Black"/>
+                        </InkCanvas.DefaultDrawingAttributes>
+                    </InkCanvas>
+                </Border>
             </Grid>
 
-            <Grid Grid.Row="2" Background="Red">
-                
+            <Grid Grid.Row="2" Background="Gray">
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="5*" />
+                    <ColumnDefinition Width="5*" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Button Name="MyClearButton" Click="MyClearButton_Click" Width="100" Height="30" FontSize="16" Margin="10" IsEnabled="False" Visibility="Collapsed">Clear</Button>
+                    <Button Name="MyUndoButton" Click="MyUndoButton_Click" Width="100" Height="30" FontSize="16" Margin="10" IsEnabled="False" Visibility="Collapsed">Undo</Button>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Button Name="MySubmitButton" Click="MySubmitButton_Click" Width="100" Height="30" FontSize="16" Margin="10" IsEnabled="False" Visibility="Collapsed">Submit</Button>
+                </StackPanel>
+
             </Grid>
             
         </Grid>
 
         <StackPanel Name="MySettingsPanel" Grid.Row="0" Grid.RowSpan="2" Panel.ZIndex="2"
                 VerticalAlignment="Center" HorizontalAlignment="Center"
-                Background="White" Visibility="Visible">
+                Background="White" Visibility="Collapsed">
             <Border BorderBrush="Black" BorderThickness="10" Padding="10">
                 <StackPanel>
 
@@ -52,30 +80,30 @@
                     <StackPanel Margin="10" />
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                        <TextBox Width="25" FontSize="16" Margin="5"></TextBox>
-                        <TextBlock Name="MyUserNumberBox"  FontSize="16" Margin="5">User Number</TextBlock>
+                        <TextBox Name="MyUserNumberBox" Padding="5,0,5,0" MaxLength="2" Width="50" FontSize="16" Margin="5" >0</TextBox>
+                        <TextBlock FontSize="16" Margin="5">User Number</TextBlock>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                        <TextBox Width="25" FontSize="16" Margin="5"></TextBox>
-                        <TextBlock Name="MyIterationCountBox" FontSize="16" Margin="5">Iteration Count</TextBlock>
+                        <TextBox Name="MyIterationCountBox" Padding="5,0,5,0" MaxLength="3" Width="50" FontSize="16" Margin="5">1</TextBox>
+                        <TextBlock FontSize="16" Margin="5">Iteration Count</TextBlock>
                     </StackPanel>
                     
                     <Separator Margin="5" />
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                        <CheckBox Margin="5"></CheckBox>
-                        <TextBlock Name="MyPreviewImageCheckBox" FontSize="16" Margin="5">Show preview image?</TextBlock>
+                        <CheckBox Name="MyPreviewImageCheckBox" Margin="5"></CheckBox>
+                        <TextBlock FontSize="16" Margin="5">Show preview image?</TextBlock>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                        <CheckBox Margin="5"></CheckBox>
-                        <TextBlock Name="MyTraceImageCheckBox" FontSize="16" Margin="5">Show trace image?</TextBlock>
+                        <CheckBox Name="MyTraceImageCheckBox" Margin="5"></CheckBox>
+                        <TextBlock FontSize="16" Margin="5">Show trace image?</TextBlock>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                        <CheckBox Margin="5"></CheckBox>
-                        <TextBlock Name="MyRandomizePromptsCheckBox" FontSize="16" Margin="5">Randomize prompts?</TextBlock>
+                        <CheckBox Name="MyRandomizePromptsCheckBox" Margin="5"></CheckBox>
+                        <TextBlock FontSize="16" Margin="5">Randomize prompts?</TextBlock>
                     </StackPanel>
 
                     <Separator />
@@ -83,8 +111,8 @@
                     <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
                         <TextBlock FontSize="16" Margin="5">Writing Area:</TextBlock>
                         <StackPanel Orientation="Vertical">
-                            <RadioButton GroupName="WritingArea" Name="MyRectangularAreaButton" Click="MyRectangularAreaButton_Click"  FontSize="16" Margin="5">Rectangular</RadioButton>
-                            <RadioButton GroupName="WritingArea" Name="MySquareAreaButton" Click="MySquareAreaButton_Click"  FontSize="16" Margin="5">Square</RadioButton>
+                            <RadioButton GroupName="WritingArea" Name="MyRectangularAreaButton" IsChecked="True" FontSize="16" Margin="5">Rectangular</RadioButton>
+                            <RadioButton GroupName="WritingArea" Name="MySquareAreaButton" IsChecked="False" FontSize="16" Margin="5">Square</RadioButton>
                         </StackPanel>
                     </StackPanel>
 
@@ -94,7 +122,7 @@
                         <TextBlock FontSize="16" Margin="5">Save Directory:</TextBlock>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                             <Button Name="MySaveDirectoryButton" Click="MySaveDirectoryButton_Click"  Width="25" FontSize="16" Margin="5">...</Button>
-                            <TextBox Name="MySaveDirectoryBox"  Width="300" FontSize="16" Margin="5"></TextBox>
+                            <TextBox Name="MySaveDirectoryBox"  Width="300" FontSize="16" Margin="5">.</TextBox>
                         </StackPanel>
                     </StackPanel>
 
