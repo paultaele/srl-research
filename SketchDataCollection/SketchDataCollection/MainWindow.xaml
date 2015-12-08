@@ -25,16 +25,30 @@
                 <RowDefinition Height="1*" />
             </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="0" Orientation="Horizontal" Background="Gray">
-                <Grid Name="MyPreviewImageControl">
-                    <Image Name="MyPreviewImage"/>
-                </Grid>
-                <StackPanel Margin="20">
-                    <TextBlock Name="MyInstructionDisplay" FontSize="24" FontWeight="Bold" Visibility="Hidden">Please draw:</TextBlock>
-                    <TextBlock Name="MyLabelDisplay" FontSize="36" FontStyle="Italic"></TextBlock>
-                </StackPanel>
+            <Grid Grid.Row="0" Background="Gray">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="7*" />
+                    <ColumnDefinition Width="3*" />
+                </Grid.ColumnDefinitions>
                 
-            </StackPanel>
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Grid Name="MyPreviewImageControl">
+                        <Image Name="MyPreviewImage"/>
+                    </Grid>
+                    <StackPanel Margin="20">
+                        <TextBlock Name="MyInstructionDisplay" FontSize="24" FontWeight="Bold" Visibility="Hidden">Please draw:</TextBlock>
+                        <TextBlock Name="MyLabelDisplay" FontSize="36" FontStyle="Italic"></TextBlock>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Name="MyProgressPanel" Visibility="Collapsed" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <TextBlock FontSize="40" Name="MyCurrentCountBlock" FontWeight="Bold" Margin="10"></TextBlock>
+                    <TextBlock FontSize="40" FontWeight="Bold" Margin="10">/</TextBlock>
+                    <TextBlock FontSize="40" Name="MyTotalCountBlock" FontWeight="Bold" Margin="10"></TextBlock>
+                </StackPanel>
+            </Grid>
+            
+            
 
             <Grid Grid.Row="1" Background="Gray">
                 <Border Name="MyCanvasBorder" BorderThickness="5" BorderBrush="Black" Margin="20" Visibility="Hidden">

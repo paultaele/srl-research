@@ -258,8 +258,9 @@ namespace SketchDataCollection
 
         private void SetupInterface(int user, int count, bool preview, bool trace, bool random, bool isRect, string loadDir, string saveDir)
         {
-            // display interface buttons
+            // display interface content
             MyInstructionDisplay.Visibility = Visibility.Visible;
+            MyProgressPanel.Visibility = Visibility.Visible;
             MyClearButton.Visibility = Visibility.Visible;
             MyUndoButton.Visibility = Visibility.Visible;
             MySubmitButton.Visibility = Visibility.Visible;
@@ -281,7 +282,9 @@ namespace SketchDataCollection
             // set up contents
             // Tuple< LABEL , IMAGE_PATH , SAVE_PATH >
             string userNumber = Prepend(user.ToString(), 2, "0");
+            string userDir = saveDir + @"\" + userNumber;
             var contents = new List<Tuple<string, string, string>>();
+            Directory.CreateDirectory(userDir);
             foreach (string imagePath in Directory.GetFiles(myLoadDirectory))
             {
                 if (imagePath.EndsWith(".png"))
@@ -293,7 +296,7 @@ namespace SketchDataCollection
                     {
                         iterationCount = Prepend(i.ToString(), 3, "0");
                         savePath = label + "_" + userNumber + "_" + iterationCount;
-                        contents.Add(new Tuple<string, string, string>(label, imagePath, saveDir + @"\" + savePath + ".xml"));
+                        contents.Add(new Tuple<string, string, string>(label, imagePath, userDir + @"\" + savePath + ".xml"));
                     }
                 }
             }
@@ -306,6 +309,7 @@ namespace SketchDataCollection
 
             // load initial content
             myIndexer = 0;
+            MyTotalCountBlock.Text = contents.Count.ToString();
             LoadContent(contents, myIndexer, preview, trace);
         }
 
@@ -316,6 +320,7 @@ namespace SketchDataCollection
             string label = content.Item1;
             string imagePath = content.Item2;
             string savePath = content.Item3;
+            MyCurrentCountBlock.Text = index.ToString();
 
             // get image and info
             Image image = new Image();
