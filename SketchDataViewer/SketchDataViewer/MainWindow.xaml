@@ -27,15 +27,15 @@
 
             <!-- Transform Controls -->
             <StackPanel Grid.Column="0" Margin="10">
-                <CheckBox Name="MyResampleButton" Click="MyResampleButton_Click"  IsEnabled="False" FontSize="20" FontWeight="Bold" Margin="10">Resample</CheckBox>
-                <Slider Name="MyResampleSlider" PreviewMouseUp="MyResampleSlider_PreviewMouseUp" IsEnabled="False" Foreground="White" Maximum="4" TickPlacement="BottomRight" TickFrequency="1" IsSnapToTickEnabled="True" Margin="30,0,30,0"></Slider>
-                <CheckBox Name="MyScaleButton" Click="MyScaleButton_Click"  IsEnabled="False" FontSize="20" FontWeight="Bold" Margin="10">Scale</CheckBox>
-                <Slider Name="MyScaleSlider" PreviewMouseUp="MyScaleSlider_PreviewMouseUp" IsEnabled="False" Foreground="White" Maximum="3" TickPlacement="BottomRight" TickFrequency="1" IsSnapToTickEnabled="True" Margin="30,0,30,0"></Slider>
-                <CheckBox Name="MyTranslateButton" Click="MyTranslateButton_Click" IsEnabled="False" FontSize="20" FontWeight="Bold" Margin="10">Translate</CheckBox>
+                <CheckBox Name="MyResampleButton" Click="MyResampleButton_Click"  IsEnabled="True" FontSize="20" FontWeight="Bold" Margin="10">Resample</CheckBox>
+                <Slider Name="MyResampleSlider" PreviewMouseUp="MyResampleSlider_PreviewMouseUp" IsEnabled="True" Foreground="White" Maximum="4" TickPlacement="BottomRight" TickFrequency="1" IsSnapToTickEnabled="True" Margin="30,0,30,0"></Slider>
+                <CheckBox Name="MyScaleButton" Click="MyScaleButton_Click"  IsEnabled="True" FontSize="20" FontWeight="Bold" Margin="10">Scale</CheckBox>
+                <Slider Name="MyScaleSlider" PreviewMouseUp="MyScaleSlider_PreviewMouseUp" IsEnabled="True" Foreground="White" Maximum="3" TickPlacement="BottomRight" TickFrequency="1" IsSnapToTickEnabled="True" Margin="30,0,30,0"></Slider>
+                <CheckBox Name="MyTranslateButton" Click="MyTranslateButton_Click" IsEnabled="True" FontSize="20" FontWeight="Bold" Margin="10">Translate</CheckBox>
 
                 <Separator Margin="50,10,50,10"  Background="Black" />
                 
-                <CheckBox Name="MyDisplayPointsButton" Click="MyDisplayPointsButton_Click"  IsEnabled="False" FontSize="20" FontWeight="Bold" Margin="10">Display Points</CheckBox>
+                <CheckBox Name="MyDisplayPointsButton" Click="MyDisplayPointsButton_Click"  IsEnabled="True" FontSize="20" FontWeight="Bold" Margin="10">Display Points</CheckBox>
             </StackPanel>
 
             <!-- View Controls -->
@@ -50,9 +50,9 @@
                 <Grid Grid.Row="0">
                     <Border BorderBrush="Black" BorderThickness="10" Margin="10">
                         <InkCanvas Name="MyCanvas" IsEnabled="False">
-                            <!--<InkCanvas.DefaultDrawingAttributes>
+                            <InkCanvas.DefaultDrawingAttributes>
                                 <DrawingAttributes Width="3" Height="3" Color="Black" />
-                            </InkCanvas.DefaultDrawingAttributes>-->
+                            </InkCanvas.DefaultDrawingAttributes>
                         </InkCanvas>
                     </Border>
                 </Grid>
@@ -65,11 +65,11 @@
                     </Grid.ColumnDefinitions>
 
                     <Grid Grid.Column="0">
-                        <Button Name="MyPrevButton" IsEnabled="False" HorizontalAlignment="Left" VerticalAlignment="Center" Width="50" Height="50" Margin="20" FontSize="24">◀</Button>
+                        <Button Name="MyPrevButton" IsEnabled="False" HorizontalAlignment="Left" VerticalAlignment="Center" Width="50" Height="50" Margin="20" FontSize="24" Click="MyPrevButton_Click">◀</Button>
                     </Grid>
 
                     <Grid Grid.Column="1">
-                        <Button Name="MyNextButton" IsEnabled="False" HorizontalAlignment="Right" VerticalAlignment="Center" Width="50" Height="50" Margin="20" FontSize="24">▶</Button>
+                        <Button Name="MyNextButton" IsEnabled="False" HorizontalAlignment="Right" VerticalAlignment="Center" Width="50" Height="50" Margin="20" FontSize="24" Click="MyNextButton_Click">▶</Button>
                     </Grid>
 
                 </Grid>

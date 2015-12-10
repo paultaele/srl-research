@@ -59,14 +59,14 @@ namespace Srl.Xml
             {
                 // initialize the stylus point and time lists
                 StylusPointCollection points = new StylusPointCollection();
-                List<long> times = new List<long>();
+                List<int> times = new List<int>();
 
                 // iterate through each point element
                 foreach (XElement pointElement in strokeElement.Elements())
                 {
                     double x, y;
                     StylusPoint point;
-                    long time;
+                    int time;
 
                     x = Double.Parse(pointElement.Attribute("x").Value);
                     y = Double.Parse(pointElement.Attribute("y").Value);
