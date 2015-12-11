@@ -221,6 +221,16 @@ namespace SketchDataCollection
                 return;
             }
 
+            // get offset count
+            string offsetCountText = MyOffsetCountBox.Text;
+            int offsetCount;
+            isNumeric = int.TryParse(offsetCountText, out offsetCount);
+            if (!isNumeric || offsetCount < 0)
+            {
+                MessageBox.Show("Offset count is not a positive integer.");
+                return;
+            }
+
             // get checkbox values
             bool showPreviewImage = MyPreviewImageCheckBox.IsChecked.Value;
             bool showTraceImage = MyTraceImageCheckBox.IsChecked.Value;
@@ -248,6 +258,7 @@ namespace SketchDataCollection
             // set up interface
             SetupInterface(userNumber,
                 iterationCount,
+                offsetCount,
                 showPreviewImage,
                 showTraceImage,
                 randomizePrompts,
@@ -256,7 +267,7 @@ namespace SketchDataCollection
                 saveDirectory);
         }
 
-        private void SetupInterface(int user, int count, bool preview, bool trace, bool random, bool isRect, string loadDir, string saveDir)
+        private void SetupInterface(int user, int count, int offset, bool preview, bool trace, bool random, bool isRect, string loadDir, string saveDir)
         {
             // display interface content
             MyInstructionDisplay.Visibility = Visibility.Visible;
@@ -294,7 +305,7 @@ namespace SketchDataCollection
                     string savePath, iterationCount;
                     for (int i = 0; i < count; ++i)
                     {
-                        iterationCount = Prepend(i.ToString(), 3, "0");
+                        iterationCount = Prepend((i + offset).ToString(), 3, "0");
                         savePath = label + "_" + userNumber + "_" + iterationCount;
                         contents.Add(new Tuple<string, string, string>(label, imagePath, userDir + @"\" + savePath + ".xml"));
                     }
@@ -313,7 +324,7 @@ namespace SketchDataCollection
             LoadContent(contents, myIndexer, preview, trace);
         }
 
-        private void LoadContent(List<Tuple<string,string,string>> contents, int index, bool preview, bool trace)
+        private void LoadContent(List<Tuple<string, string, string>> contents, int index, bool preview, bool trace)
         {
             // get content
             var content = contents[index];
@@ -362,10 +373,11 @@ namespace SketchDataCollection
                 //
                 image.Width = imageWidth * scaleFactor;
                 image.Height = imageHeight * scaleFactor;
-                InkCanvas.SetLeft(image, (canvasWidth / 2.0) - (imageWidth / 2.0));
-                InkCanvas.SetTop(image, (canvasHeight / 2.0) - (imageHeight / 2.0));
+                InkCanvas.SetLeft(image, (canvasWidth / 2.0) - (image.Width / 2.0));
+                InkCanvas.SetTop(image, (canvasHeight / 2.0) - (image.Height / 2.0));
                 MyCanvas.Children.Add(image);
 
+                //
                 myPreviewImage = image;
             }
         }
@@ -376,6 +388,7 @@ namespace SketchDataCollection
 
             MyUserNumberBox.Text = "";
             MyIterationCountBox.Text = "";
+            MyOffsetCountBox.Text = "";
 
             MyPreviewImageCheckBox.IsChecked = false;
             MyTraceImageCheckBox.IsChecked = false;

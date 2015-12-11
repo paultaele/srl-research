@@ -9,14 +9,48 @@ namespace Srl.Tools
 {
     public static class SketchTools
     {
+        Pro#region Normalize
+
         public static StrokeCollection Normalize(StrokeCollection strokes, int resampleSize, double scaleBounds, StylusPoint origin)
         {
+            return Normalize(strokes, resampleSize, scaleBounds, origin, ScaleType.Hybrid, TranslateType.Centroid);
+        }
+
+        public static StrokeCollection Normalize(StrokeCollection strokes, int resampleSize, double scaleBounds, StylusPoint origin, ScaleType scaleType, TranslateType translateType)
+        {
+            // resample
             strokes = Resample(strokes, resampleSize);
-            strokes = Scale(strokes, scaleBounds);
-            strokes = Translate(strokes, origin);
+
+            // scale
+            if (scaleType.Equals(ScaleType.Proportional))
+            {
+                strokes = ScaleProportional(strokes, resampleSize);
+            }
+            else if (scaleType.Equals(ScaleType.Square))
+            {
+                strokes = ScaleSquare(strokes, resampleSize);
+            }
+            else
+            {
+                strokes = Scale(strokes, resampleSize);
+            }
+
+            // translate
+            if (translateType.Equals(TranslateType.Centroid))
+            {
+                strokes = TranslateCentroid(strokes, origin);
+            }
+            else
+            {
+                strokes = TranslateMedian(strokes, origin);
+            }
 
             return strokes;
         }
+
+        #endregion
+
+        #region Resample
 
         public static StrokeCollection Resample(StrokeCollection strokes, int n)
         {
@@ -70,6 +104,10 @@ namespace Srl.Tools
             return newStrokes;
         }
 
+        #endregion
+
+        #region Scale
+
         public static StrokeCollection Scale(StrokeCollection strokes, double size)
         {
             if (strokes.Count == 1 && !IsDiagonal(strokes[0]))
@@ -77,10 +115,111 @@ namespace Srl.Tools
                 return ScaleProportional(strokes, size);
             }
 
-            return ScaleBox(strokes, size);
+            return ScaleSquare(strokes, size);
         }
 
+        public static StrokeCollection ScaleProportional(StrokeCollection strokes, double size)
+        {
+            // get the scaling factor
+            Rect B = strokes.GetBounds();
+            double scale = B.Height > B.Width ? size / B.Height : size / B.Width;
+
+            // get the offset
+            double xoffset = Double.MaxValue;
+            double yoffset = Double.MaxValue;
+            foreach (Stroke stroke in strokes)
+            {
+                foreach (StylusPoint point in stroke.StylusPoints)
+                {
+                    if (point.X < xoffset) xoffset = point.X;
+                    if (point.Y < yoffset) yoffset = point.Y;
+                }
+            }
+
+            // 
+            StrokeCollection newStrokes = new StrokeCollection();
+            foreach (Stroke stroke in strokes)
+            {
+                var newPoints = new StylusPointCollection();
+                double x, y;
+                foreach (StylusPoint point in stroke.StylusPoints)
+                {
+                    x = ((point.X - xoffset) * scale) + xoffset;
+                    y = ((point.Y - yoffset) * scale) + yoffset;
+                    newPoints.Add(new StylusPoint(x, y));
+                }
+
+                newStrokes.Add(new Stroke(newPoints));
+            }
+
+            //
+            newStrokes.AddPropertyData(LABEL_GUID, strokes.GetPropertyData(LABEL_GUID));
+            return newStrokes;
+        }
+
+        public static StrokeCollection ScaleSquare(StrokeCollection strokes, double size)
+        {
+            Rect B = strokes.GetBounds();
+
+            // 
+            StrokeCollection newStrokes = new StrokeCollection();
+            foreach (Stroke stroke in strokes)
+            {
+
+                StylusPointCollection newPoints = new StylusPointCollection();
+
+                foreach (StylusPoint point in stroke.StylusPoints)
+                {
+                    double qx = point.X * size / B.Width;
+                    double qy = point.Y * size / B.Height;
+                    StylusPoint q = new StylusPoint(qx, qy);
+                    newPoints.Add(q);
+                }
+
+                //
+                Stroke newStroke = new Stroke(newPoints);
+                newStrokes.Add(newStroke);
+            }
+
+            //
+            newStrokes.AddPropertyData(LABEL_GUID, strokes.GetPropertyData(LABEL_GUID));
+            return newStrokes;
+        }
+
+        public static StrokeCollection Scale(StrokeCollection strokes, double size, ScaleType type)
+        {
+            if (type.Equals(ScaleType.Proportional))
+            {
+                return ScaleProportional(strokes, size);
+            }
+            else if (type.Equals(ScaleType.Square))
+            {
+                return ScaleSquare(strokes, size);
+            }
+
+            return Scale(strokes, size);
+        }
+
+        #endregion
+
+        #region Translate
+
         public static StrokeCollection Translate(StrokeCollection strokes, StylusPoint k)
+        {
+            return Translate(strokes, k, TranslateType.Centroid);
+        }
+
+        public static StrokeCollection TranslateCentroid(StrokeCollection strokes, StylusPoint k)
+        {
+            return Translate(strokes, k, TranslateType.Centroid);
+        }
+
+        public static StrokeCollection TranslateMedian(StrokeCollection strokes, StylusPoint k)
+        {
+            return Translate(strokes, k, TranslateType.Median);
+        }
+
+        public static StrokeCollection Translate(StrokeCollection strokes, StylusPoint k, TranslateType type)
         {
             StrokeCollection newStrokes = new StrokeCollection();
 
@@ -94,8 +233,19 @@ namespace Srl.Tools
                     allPoints.Add(point);
                 }
             }
-            StylusPoint c = Centroid(allPoints);
 
+            //
+            StylusPoint c = new StylusPoint();
+            if (type.Equals(TranslateType.Centroid))
+            {
+                c = Centroid(allPoints);
+            }
+            else
+            {
+                c = Median(allPoints);
+            }
+
+            //
             foreach (Stroke stroke in strokes)
             {
 
@@ -119,6 +269,10 @@ namespace Srl.Tools
             newStrokes.AddPropertyData(LABEL_GUID, strokes.GetPropertyData(LABEL_GUID));
             return newStrokes;
         }
+
+        #endregion
+
+        #region Line Geometries
 
         public static bool IsLine(Stroke stroke)
         {
@@ -174,73 +328,9 @@ namespace Srl.Tools
             return !IsHorizontal(stroke) && !IsVertical(stroke);
         }
 
-        public static StrokeCollection ScaleProportional(StrokeCollection strokes, double size)
-        {
-            // get the scaling factor
-            Rect B = strokes.GetBounds();
-            double scale = B.Height > B.Width ? size / B.Height : size / B.Width;
+        #endregion
 
-            // get the offset
-            double xoffset = Double.MaxValue;
-            double yoffset = Double.MaxValue;
-            foreach (Stroke stroke in strokes)
-            {
-                foreach (StylusPoint point in stroke.StylusPoints)
-                {
-                    if (point.X < xoffset) xoffset = point.X;
-                    if (point.Y < yoffset) yoffset = point.Y;
-                }
-            }
-
-            // 
-            StrokeCollection newStrokes = new StrokeCollection();
-            foreach (Stroke stroke in strokes)
-            {
-                var newPoints = new StylusPointCollection();
-                double x, y;
-                foreach (StylusPoint point in stroke.StylusPoints)
-                {
-                    x = ((point.X - xoffset) * scale) + xoffset;
-                    y = ((point.Y - yoffset) * scale) + yoffset;
-                    newPoints.Add(new StylusPoint(x, y));
-                }
-
-                newStrokes.Add(new Stroke(newPoints));
-            }
-
-            //
-            newStrokes.AddPropertyData(LABEL_GUID, strokes.GetPropertyData(LABEL_GUID));
-            return newStrokes;
-        }
-
-        public static StrokeCollection ScaleBox(StrokeCollection strokes, double size)
-        {
-            Rect B = strokes.GetBounds();
-
-            // 
-            StrokeCollection newStrokes = new StrokeCollection();
-            foreach (Stroke stroke in strokes)
-            {
-
-                StylusPointCollection newPoints = new StylusPointCollection();
-
-                foreach (StylusPoint point in stroke.StylusPoints)
-                {
-                    double qx = point.X * size / B.Width;
-                    double qy = point.Y * size / B.Height;
-                    StylusPoint q = new StylusPoint(qx, qy);
-                    newPoints.Add(q);
-                }
-
-                //
-                Stroke newStroke = new Stroke(newPoints);
-                newStrokes.Add(newStroke);
-            }
-
-            //
-            newStrokes.AddPropertyData(LABEL_GUID, strokes.GetPropertyData(LABEL_GUID));
-            return newStrokes;
-        }
+        #region Distance Measurements
 
         public static double PathLength(StrokeCollection strokes)
         {
@@ -308,12 +398,37 @@ namespace Srl.Tools
             return new StylusPoint(meanX, meanY);
         }
 
+        private static StylusPoint Median(List<StylusPoint> points)
+        {
+            double minX = Double.MaxValue;
+            double minY = Double.MaxValue;
+            double maxX = Double.MinValue;
+            double maxY = Double.MinValue;
+            foreach (StylusPoint point in points)
+            {
+                if (point.X < minX) minX = point.X;
+                if (point.Y < minY) minY = point.Y;
 
+                if (point.X > maxX) maxX = point.X;
+                if (point.Y > maxY) maxY = point.Y;
+            }
+
+            return new StylusPoint((minX + maxX) / 2.0, (minY + maxY) / 2.0);
+        }
+
+        #endregion
+
+        #region Fields and Enums
 
         private static readonly double MIN_LINE_RATIO = 0.95;
         private static readonly double ANGLE_DEVIATION = 5.0;
 
         public static readonly Guid TIMES_GUID = new Guid("21EC2020-3AEA-4069-A2DD-08002B30309D");
         public static readonly Guid LABEL_GUID = new Guid("21EC2020-3AEA-4069-A2DD-08002B30309E");
+
+        public enum ScaleType { Hybrid, Proportional, Square}
+        public enum TranslateType { Centroid, Median }
+
+        #endregion
     }
 }

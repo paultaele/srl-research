@@ -94,15 +94,20 @@
                     <StackPanel Margin="10" />
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                        <TextBox Name="MyUserNumberBox" Padding="5,0,5,0" MaxLength="2" Width="50" FontSize="16" Margin="5" >0</TextBox>
+                        <TextBox Name="MyUserNumberBox" Padding="5,0,5,0" MaxLength="2" Width="50" FontSize="16" Margin="5" Text="0"/>
                         <TextBlock FontSize="16" Margin="5">User Number</TextBlock>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                        <TextBox Name="MyIterationCountBox" Padding="5,0,5,0" MaxLength="3" Width="50" FontSize="16" Margin="5">1</TextBox>
+                        <TextBox Name="MyIterationCountBox" Padding="5,0,5,0" MaxLength="3" Width="50" FontSize="16" Margin="5" Text="1"/>
                         <TextBlock FontSize="16" Margin="5">Iteration Count</TextBlock>
                     </StackPanel>
-                    
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                        <TextBox x:Name="MyOffsetCountBox" Padding="5,0,5,0" MaxLength="3" Width="50" FontSize="16" Margin="5" Text="0"/>
+                        <TextBlock FontSize="16" Margin="5">Count Offset</TextBlock>
+                    </StackPanel>
+
                     <Separator Margin="5" />
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
@@ -124,7 +129,7 @@
 
                     <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
                         <TextBlock FontSize="16" Margin="5">Writing Area:</TextBlock>
-                        <StackPanel Orientation="Vertical">
+                        <StackPanel Orientation="Horizontal">
                             <RadioButton GroupName="WritingArea" Name="MyRectangularAreaButton" IsChecked="True" FontSize="16" Margin="5">Rectangular</RadioButton>
                             <RadioButton GroupName="WritingArea" Name="MySquareAreaButton" IsChecked="False" FontSize="16" Margin="5">Square</RadioButton>
                         </StackPanel>

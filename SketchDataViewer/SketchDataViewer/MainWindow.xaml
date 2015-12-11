@@ -29,9 +29,25 @@
             <StackPanel Grid.Column="0" Margin="10">
                 <CheckBox Name="MyResampleButton" Click="MyResampleButton_Click"  IsEnabled="True" FontSize="20" FontWeight="Bold" Margin="10">Resample</CheckBox>
                 <Slider Name="MyResampleSlider" PreviewMouseUp="MyResampleSlider_PreviewMouseUp" IsEnabled="True" Foreground="White" Maximum="4" TickPlacement="BottomRight" TickFrequency="1" IsSnapToTickEnabled="True" Margin="30,0,30,0"></Slider>
-                <CheckBox Name="MyScaleButton" Click="MyScaleButton_Click"  IsEnabled="True" FontSize="20" FontWeight="Bold" Margin="10">Scale</CheckBox>
+
+                <Separator Margin="50,10,50,10"  Background="Black" />
+                
+                <CheckBox Name="MyScaleButton" Click="MyScaleButton_Click" IsEnabled="True" FontSize="20" FontWeight="Bold" Margin="10">Scale</CheckBox>
+                <StackPanel>
+                    <RadioButton GroupName="ScaleGroup" Name="MyScaleHybridButton" Click="MyScaleHybridButton_Click" IsEnabled="True" IsChecked="True" Margin="30,5,0,5" FontSize="16" FontWeight="Bold">Hybrid</RadioButton>
+                    <RadioButton GroupName="ScaleGroup" Name="MyScaleProportionalButton" Click="MyScaleProportionalButton_Click" IsEnabled="True" Margin="30,5,0,5" FontSize="16" FontWeight="Bold">Proportional</RadioButton>
+                    <RadioButton GroupName="ScaleGroup" Name="MyScaleSquareButton" Click="MyScaleSquareButton_Click" IsEnabled="True" Margin="30,5,0,5" FontSize="16" FontWeight="Bold">Square</RadioButton>
+                </StackPanel>
                 <Slider Name="MyScaleSlider" PreviewMouseUp="MyScaleSlider_PreviewMouseUp" IsEnabled="True" Foreground="White" Maximum="3" TickPlacement="BottomRight" TickFrequency="1" IsSnapToTickEnabled="True" Margin="30,0,30,0"></Slider>
+
+                <Separator Margin="50,10,50,10"  Background="Black" />
+
                 <CheckBox Name="MyTranslateButton" Click="MyTranslateButton_Click" IsEnabled="True" FontSize="20" FontWeight="Bold" Margin="10">Translate</CheckBox>
+                <StackPanel>
+                    <RadioButton GroupName="TranslateGroup" Name="MyTranslateCentroidButton" Click="MyTranslateCentroidButton_Click" IsEnabled="True" IsChecked="True" Margin="30,5,0,5" FontSize="16" FontWeight="Bold">Centroid</RadioButton>
+                    <RadioButton GroupName="TranslateGroup" Name="MyTranslateMedianButton" Click="MyTranslateMedianButton_Click" IsEnabled="True" Margin="30,5,0,5" FontSize="16" FontWeight="Bold">Median</RadioButton>
+                </StackPanel>
+
 
                 <Separator Margin="50,10,50,10"  Background="Black" />
                 

@@ -84,12 +84,33 @@ namespace SketchDataViewer
             }
             if (MyScaleButton.IsChecked.Value)
             {
-                clone = SketchTools.Scale(clone, SCALE_SIZE[(int)MyScaleSlider.Value]);
+                int scaleSize = SCALE_SIZE[(int)MyScaleSlider.Value];
+
+                if (MyScaleProportionalButton.IsChecked.Value)
+                {
+                    clone = SketchTools.Scale(clone, scaleSize, SketchTools.ScaleType.Proportional);
+                }
+                else if (MyScaleSquareButton.IsChecked.Value)
+                {
+                    clone = SketchTools.Scale(clone, scaleSize, SketchTools.ScaleType.Square);
+                }
+                else
+                {
+                    clone = SketchTools.Scale(clone, scaleSize, SketchTools.ScaleType.Hybrid);
+                }
             }
             if (MyTranslateButton.IsChecked.Value)
             {
                 var center = new StylusPoint(MyCanvas.ActualWidth / 2.0, MyCanvas.ActualHeight / 2.0);
-                clone = SketchTools.Translate(clone, center);
+
+                if (MyTranslateCentroidButton.IsChecked.Value)
+                {
+                    clone = SketchTools.Translate(clone, center, SketchTools.TranslateType.Centroid);
+                }
+                else
+                {
+                    clone = SketchTools.Translate(clone, center, SketchTools.TranslateType.Median);
+                }
             }
 
             // display strokes
@@ -229,6 +250,31 @@ namespace SketchDataViewer
             }
             MyPrevButton.IsEnabled = true;
 
+            Transform();
+        }
+
+        private void MyScaleHybridButton_Click(object sender, RoutedEventArgs e)
+        {
+            Transform();
+        }
+
+        private void MyScaleProportionalButton_Click(object sender, RoutedEventArgs e)
+        {
+            Transform();
+        }
+
+        private void MyScaleSquareButton_Click(object sender, RoutedEventArgs e)
+        {
+            Transform();
+        }
+
+        private void MyTranslateMedianButton_Click(object sender, RoutedEventArgs e)
+        {
+            Transform();
+        }
+
+        private void MyTranslateCentroidButton_Click(object sender, RoutedEventArgs e)
+        {
             Transform();
         }
 

@@ -41,7 +41,8 @@
     <Reference Include="Ookii.Dialogs.Wpf">
       <HintPath>..\..\Ookii.Dialogs.Wpf.dll</HintPath>
     </Reference>
-    <Reference Include="Srl">
+    <Reference Include="Srl, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Srl.dll</HintPath>
     </Reference>
     <Reference Include="System" />
