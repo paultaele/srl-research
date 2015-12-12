@@ -169,7 +169,7 @@ namespace SketchDataViewer
             }
         }
 
-        private StrokeCollection Clone(StrokeCollection others)
+        public StrokeCollection Clone(StrokeCollection others)
         {
             // get GUIDs
             Guid labelGuid = SketchTools.LABEL_GUID;

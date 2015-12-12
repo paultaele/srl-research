@@ -331,7 +331,7 @@ namespace SketchDataCollection
             string label = content.Item1;
             string imagePath = content.Item2;
             string savePath = content.Item3;
-            MyCurrentCountBlock.Text = index.ToString();
+            MyCurrentCountBlock.Text = (index+1).ToString();
 
             // get image and info
             Image image = new Image();

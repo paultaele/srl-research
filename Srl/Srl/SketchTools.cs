@@ -9,7 +9,7 @@ namespace Srl.Tools
 {
     public static class SketchTools
     {
-        Pro#region Normalize
+        #region Normalize
 
         public static StrokeCollection Normalize(StrokeCollection strokes, int resampleSize, double scaleBounds, StylusPoint origin)
         {
@@ -414,6 +414,47 @@ namespace Srl.Tools
             }
 
             return new StylusPoint((minX + maxX) / 2.0, (minY + maxY) / 2.0);
+        }
+
+        #endregion
+
+        #region Helper Methods
+
+        public static StrokeCollection Clone(StrokeCollection others)
+        {
+            // get GUIDs
+            Guid labelGuid = SketchTools.LABEL_GUID;
+            Guid timesGuid = SketchTools.TIMES_GUID;
+
+            // initialize clone list
+            StrokeCollection strokes = new StrokeCollection();
+            strokes.AddPropertyData(labelGuid, others.GetPropertyData(labelGuid));
+
+            // iterate through each original strokes
+            foreach (Stroke other in others)
+            {
+                // clone the points
+                var points = new StylusPointCollection();
+                foreach (StylusPoint point in other.StylusPoints)
+                {
+                    points.Add(new StylusPoint(point.X, point.Y));
+                }
+
+                // clone the times
+                var times = new List<int>();
+                int[] otherTimes = (int[])other.GetPropertyData(timesGuid);
+                foreach (int time in otherTimes)
+                {
+                    times.Add(time);
+                }
+
+                // clone the stroke
+                Stroke stroke = new Stroke(points);
+                stroke.AddPropertyData(timesGuid, times.ToArray());
+                strokes.Add(stroke);
+            }
+
+            return strokes;
         }
 
         #endregion

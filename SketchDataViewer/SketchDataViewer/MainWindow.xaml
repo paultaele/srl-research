@@ -27,7 +27,7 @@
 
             <!-- Transform Controls -->
             <StackPanel Grid.Column="0" Margin="10">
-                <CheckBox Name="MyResampleButton" Click="MyResampleButton_Click"  IsEnabled="True" FontSize="20" FontWeight="Bold" Margin="10">Resample</CheckBox>
+                <CheckBox Name="MyResampleButton" Click="MyResampleButton_Click" IsEnabled="True" FontSize="20" FontWeight="Bold" Margin="10">Resample</CheckBox>
                 <Slider Name="MyResampleSlider" PreviewMouseUp="MyResampleSlider_PreviewMouseUp" IsEnabled="True" Foreground="White" Maximum="4" TickPlacement="BottomRight" TickFrequency="1" IsSnapToTickEnabled="True" Margin="30,0,30,0"></Slider>
 
                 <Separator Margin="50,10,50,10"  Background="Black" />
