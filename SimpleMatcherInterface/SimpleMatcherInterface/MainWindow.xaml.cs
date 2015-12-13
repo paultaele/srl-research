@@ -2,6 +2,8 @@
 using Srl.Tools;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Ink;
@@ -34,18 +36,12 @@ namespace SimpleMatcherInterface
             MyCanvasBorder.Width = length;
             MyCanvasBorder.Height = length;
 
-            //
-            double length2 = MyResultCanvasBorder.ActualHeight > MyResultCanvasBorder.ActualWidth
-                ? MyResultCanvasBorder.ActualWidth : MyResultCanvasBorder.ActualHeight;
-            MyResultCanvasBorder.Width = length2;
-            MyResultCanvasBorder.Height = length2;
-
             // set up the classifier
             myResampleSize = 128;
             myScaleBounds = 500.0;
             myOrigin = new StylusPoint(length / 2.0, length / 2.0);
-            myScaleType = SketchTools.ScaleType.Proportional;
-            myTranslateType = SketchTools.TranslateType.Median;
+            myScaleType = SketchTools.ScaleType.Hybrid;
+            myTranslateType = SketchTools.TranslateType.Centroid;
             myMatcher = new GreedyMatcher(myResampleSize, myScaleBounds, myOrigin, myScaleType, myTranslateType);
 
             // initialize an empty list of strokes
@@ -75,6 +71,22 @@ namespace SimpleMatcherInterface
             var dialog = new VistaFolderBrowserDialog();
             if (!dialog.ShowDialog().Value)
             {
+                return;
+            }
+
+            //
+            bool hasData = false;
+            foreach (var file in Directory.GetFiles(dialog.SelectedPath))
+            {
+                if (file.EndsWith(".xml"))
+                {
+                    hasData = true;
+                }
+            }
+            if (!hasData)
+            {
+                MessageBox.Show("You must select a directory that contains data files.");
+
                 return;
             }
 
@@ -226,33 +238,37 @@ namespace SimpleMatcherInterface
             List<string> labels = myMatcher.Labels();
 
             //
-            DisplayResults(results);
+            DisplayResults(results, myMatcher);
 
-            //for (int i = 0; i < 5; ++i)
-            //{
-            //    Console.WriteLine((i+1) + ". " + labels[i] + " | " + myMatcher.Score(results[i]));
-            //}
-            //Console.WriteLine();
-
-            //
 
             // clear the strokes
             ClearStrokes();
         }
 
-        private void DisplayResults(List<StrokeCollection> results)
+        private void DisplayResults(List<StrokeCollection> results, GreedyMatcher matcher)
         {
-            Console.WriteLine(MyResultCanvasBorder.Width);
-            double length = MyResultCanvasBorder.Width;
-            StylusPoint origin = new StylusPoint(length / 2.0, length / 2.0);
+            int indexLength = 5;
+            int labelLength = 5;
 
-            StrokeCollection result = SketchTools.Clone(myMatcher.TrainingData(results[0]));
+            //
+            string output = "";
+            StrokeCollection topResult;
+            StringBuilder topIndex, topLabel, topScore;
+            for (int i = 0; i < 20; ++i)
+            {
+                topResult = results[i];
 
-            result = SketchTools.Scale(result, length, SketchTools.ScaleType.Proportional);
-            result = SketchTools.Translate(result, origin, SketchTools.TranslateType.Median);
+                topIndex = new StringBuilder("" + (i + 1) + ". ");
+                topLabel = new StringBuilder((string)topResult.GetPropertyData(SketchTools.LABEL_GUID));
+                topScore = new StringBuilder("" + Math.Round(matcher.Score(topResult), 2));
 
-            MyResultCanvas.Strokes.Clear();
-            MyResultCanvas.Strokes.Add(result);
+                topIndex.Append(' ', indexLength - topIndex.Length);
+                topLabel.Append(' ', labelLength - topLabel.Length);
+                output += topIndex.ToString() + topLabel.ToString() + topScore.ToString() + "\n";
+            }
+
+            //
+            MyOutputBlock.Text = output;
         }
         
         private void MyClearButton_Click(object sender, RoutedEventArgs e)
