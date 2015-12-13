@@ -24,15 +24,15 @@ namespace Srl.Tools
             // scale
             if (scaleType.Equals(ScaleType.Proportional))
             {
-                strokes = ScaleProportional(strokes, resampleSize);
+                strokes = ScaleProportional(strokes, scaleBounds);
             }
             else if (scaleType.Equals(ScaleType.Square))
             {
-                strokes = ScaleSquare(strokes, resampleSize);
+                strokes = ScaleSquare(strokes, scaleBounds);
             }
             else
             {
-                strokes = Scale(strokes, resampleSize);
+                strokes = Scale(strokes, scaleBounds);
             }
 
             // translate
@@ -62,39 +62,57 @@ namespace Srl.Tools
             StrokeCollection newStrokes = new StrokeCollection();
 
             // iterate through each stroke points in a list of strokes
+            int pointCount = 0;
             foreach (Stroke stroke in strokes)
             {
-
                 // initialize list of resampled stroke points
                 // add the first stroke point
                 StylusPointCollection points = stroke.StylusPoints;
                 StylusPointCollection newPoints = new StylusPointCollection();
                 newPoints.Add(points[0]);
+                ++pointCount;
+                List<int> newTimes = new List<int>();
+                newTimes.Add(0);
 
                 //
+                bool isDone = false;
                 for (int i = 1; i < points.Count(); ++i)
                 {
-
                     double d = Distance(points[i - 1], points[i]);
                     if (D + d >= I)
                     {
-
                         double qx = points[i - 1].X + ((I - D) / d) * (points[i].X - points[i - 1].X);
                         double qy = points[i - 1].Y + ((I - D) / d) * (points[i].Y - points[i - 1].Y);
                         StylusPoint q = new StylusPoint(qx, qy);
-                        newPoints.Add(q);
-                        points.Insert(i, q);
-                        D = 0.0;
+
+                        if (pointCount < n - 1)
+                        {
+                            newPoints.Add(q);
+                            ++pointCount;
+                            newTimes.Add(i);
+                            points.Insert(i, q);
+                            D = 0.0;
+                        }
+                        else
+                        {
+                            isDone = true;
+                        }
                     }
                     else
                     {
                         D += d;
+                    }
+
+                    if (isDone)
+                    {
+                        break;
                     }
                 }
                 D = 0.0;
 
                 //
                 Stroke newStroke = new Stroke(newPoints);
+                newStroke.AddPropertyData(TIMES_GUID, newTimes.ToArray());
                 newStrokes.Add(newStroke);
             }
 
@@ -149,7 +167,9 @@ namespace Srl.Tools
                     newPoints.Add(new StylusPoint(x, y));
                 }
 
-                newStrokes.Add(new Stroke(newPoints));
+                Stroke newStroke = new Stroke(newPoints);
+                newStroke.AddPropertyData(TIMES_GUID, stroke.GetPropertyData(TIMES_GUID));
+                newStrokes.Add(newStroke);
             }
 
             //
@@ -178,6 +198,7 @@ namespace Srl.Tools
 
                 //
                 Stroke newStroke = new Stroke(newPoints);
+                newStroke.AddPropertyData(TIMES_GUID, stroke.GetPropertyData(TIMES_GUID));
                 newStrokes.Add(newStroke);
             }
 
@@ -262,6 +283,7 @@ namespace Srl.Tools
 
                 //
                 Stroke newStroke = new Stroke(newPoints);
+                newStroke.AddPropertyData(TIMES_GUID, stroke.GetPropertyData(TIMES_GUID));
                 newStrokes.Add(newStroke);
             }
 
@@ -467,7 +489,7 @@ namespace Srl.Tools
         public static readonly Guid TIMES_GUID = new Guid("21EC2020-3AEA-4069-A2DD-08002B30309D");
         public static readonly Guid LABEL_GUID = new Guid("21EC2020-3AEA-4069-A2DD-08002B30309E");
 
-        public enum ScaleType { Hybrid, Proportional, Square}
+        public enum ScaleType { Hybrid, Proportional, Square }
         public enum TranslateType { Centroid, Median }
 
         #endregion
