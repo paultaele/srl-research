@@ -8,9 +8,9 @@ using System.Windows.Input;
 
 namespace SimpleMatcherInterface
 {
-    public class Matcher
+    public class GreedyMatcher
     {
-        public Matcher(int resampleSize, double scaleBounds, StylusPoint origin, SketchTools.ScaleType scaleType, SketchTools.TranslateType translateType)
+        public GreedyMatcher(int resampleSize, double scaleBounds, StylusPoint origin, SketchTools.ScaleType scaleType, SketchTools.TranslateType translateType)
         {
             myResampleSize = resampleSize;
             myScaleBounds = scaleBounds;

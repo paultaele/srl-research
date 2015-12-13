@@ -24,9 +24,19 @@
                 <ColumnDefinition Width="8*"/>
             </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Column="0">
-                
-            </StackPanel>
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="2*"/>
+                    <RowDefinition Height="2*"/>
+                    <RowDefinition Height="2*"/>
+                    <RowDefinition Height="2*"/>
+                    <RowDefinition Height="2*"/>
+                </Grid.RowDefinitions>
+
+                <Border Name="MyResultCanvasBorder" Grid.Row="0">
+                    <InkCanvas Name="MyResultCanvas" IsEnabled="false"/>
+                </Border>
+            </Grid>
 
             <Grid Grid.Column="1">
                 <Grid.RowDefinitions>

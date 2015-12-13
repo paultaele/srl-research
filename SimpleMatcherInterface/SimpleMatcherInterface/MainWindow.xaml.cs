@@ -34,13 +34,19 @@ namespace SimpleMatcherInterface
             MyCanvasBorder.Width = length;
             MyCanvasBorder.Height = length;
 
+            //
+            double length2 = MyResultCanvasBorder.ActualHeight > MyResultCanvasBorder.ActualWidth
+                ? MyResultCanvasBorder.ActualWidth : MyResultCanvasBorder.ActualHeight;
+            MyResultCanvasBorder.Width = length2;
+            MyResultCanvasBorder.Height = length2;
+
             // set up the classifier
             myResampleSize = 128;
             myScaleBounds = 500.0;
             myOrigin = new StylusPoint(length / 2.0, length / 2.0);
             myScaleType = SketchTools.ScaleType.Proportional;
             myTranslateType = SketchTools.TranslateType.Median;
-            myMatcher = new Matcher(myResampleSize, myScaleBounds, myOrigin, myScaleType, myTranslateType);
+            myMatcher = new GreedyMatcher(myResampleSize, myScaleBounds, myOrigin, myScaleType, myTranslateType);
 
             // initialize an empty list of strokes
             myStrokes = new StrokeCollection();
@@ -209,23 +215,44 @@ namespace SimpleMatcherInterface
 
         private void MySubmitButton_Click(object sender, RoutedEventArgs e)
         {
-            //
+            // apply label to input strokes
             myStrokes.AddPropertyData(SketchTools.LABEL_GUID, "");
 
-            // 
+            // run the classifier on the input strokes
             myMatcher.Run(myStrokes);
 
-            // output
-            var results = myMatcher.Results();
-            var labels = myMatcher.Labels();
-            for (int i = 0; i < 5; ++i)
-            {
-                Console.WriteLine((i+1) + ". " + labels[i] + " | " + myMatcher.Score(results[i]));
-            }
-            Console.WriteLine();
+            // retrieve the list of results and labels
+            List<StrokeCollection> results = myMatcher.Results();
+            List<string> labels = myMatcher.Labels();
+
+            //
+            DisplayResults(results);
+
+            //for (int i = 0; i < 5; ++i)
+            //{
+            //    Console.WriteLine((i+1) + ". " + labels[i] + " | " + myMatcher.Score(results[i]));
+            //}
+            //Console.WriteLine();
+
+            //
 
             // clear the strokes
             ClearStrokes();
+        }
+
+        private void DisplayResults(List<StrokeCollection> results)
+        {
+            Console.WriteLine(MyResultCanvasBorder.Width);
+            double length = MyResultCanvasBorder.Width;
+            StylusPoint origin = new StylusPoint(length / 2.0, length / 2.0);
+
+            StrokeCollection result = SketchTools.Clone(myMatcher.TrainingData(results[0]));
+
+            result = SketchTools.Scale(result, length, SketchTools.ScaleType.Proportional);
+            result = SketchTools.Translate(result, origin, SketchTools.TranslateType.Median);
+
+            MyResultCanvas.Strokes.Clear();
+            MyResultCanvas.Strokes.Add(result);
         }
         
         private void MyClearButton_Click(object sender, RoutedEventArgs e)
@@ -330,7 +357,7 @@ namespace SimpleMatcherInterface
         private List<StrokeCollection> myTemplates;
         private Dictionary<StrokeCollection, StrokeCollection> myTemplateTrainingPairs;
 
-        private Matcher myMatcher;
+        private GreedyMatcher myMatcher;
 
         #endregion
     }
