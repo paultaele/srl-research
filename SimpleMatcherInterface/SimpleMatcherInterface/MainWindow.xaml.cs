@@ -368,11 +368,7 @@ namespace SimpleMatcherInterface
         private StylusPoint myOrigin;
         private SketchTools.ScaleType myScaleType;
         private SketchTools.TranslateType myTranslateType;
-
-        private List<StrokeCollection> myTrainingData;
-        private List<StrokeCollection> myTemplates;
-        private Dictionary<StrokeCollection, StrokeCollection> myTemplateTrainingPairs;
-
+        
         private GreedyMatcher myMatcher;
 
         #endregion
