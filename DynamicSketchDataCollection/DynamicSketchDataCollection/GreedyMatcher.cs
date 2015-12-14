@@ -6,7 +6,7 @@ using System.IO;
 using System.Windows.Ink;
 using System.Windows.Input;
 
-namespace Srl.Tools
+namespace DynamicSketchDataCollection
 {
     public class GreedyMatcher
     {
@@ -148,8 +148,6 @@ namespace Srl.Tools
             {
                 distance1 = Distance(input, template);
                 distance2 = Distance(template, input);
-                Console.WriteLine((string)template.GetPropertyData(SketchTools.LABEL_GUID) + ": "
-                    + distance1 + " | " + distance2);
                 distance = Math.Min(distance1, distance2);
                 score = 100.0 - (distance / (0.5 * (Math.Sqrt(myScaleBounds * myScaleBounds + myScaleBounds * myScaleBounds))));
                 templateScoresPairs.Add(new Tuple<StrokeCollection, double>(template, score));
@@ -183,7 +181,7 @@ namespace Srl.Tools
                 }
 
                 weight = 1 - ((index - 1) / inputPoints.Count);
-                
+
                 if (myIsWeighted)
                 {
                     distance += minDistance * weight;
@@ -192,7 +190,7 @@ namespace Srl.Tools
                 {
                     distance += minDistance;
                 }
-                
+
 
                 templatePoints.Remove(minPoint);
                 ++index;

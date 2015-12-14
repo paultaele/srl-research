@@ -44,7 +44,7 @@ namespace DynamicSketchDataCollection
             myOrigin = new StylusPoint(length / 2.0, length / 2.0);
             myScaleType = SketchTools.ScaleType.Hybrid;
             myTranslateType = SketchTools.TranslateType.Centroid;
-            myMatcher = new GreedyMatcher(myResampleSize, myScaleBounds, myOrigin, myScaleType, myTranslateType);
+            myMatcher = new GreedyMatcher(myResampleSize, myScaleBounds, myOrigin, myScaleType, myTranslateType, false);
 
             // initialize an empty list of strokes
             myStrokes = new StrokeCollection();
@@ -224,7 +224,7 @@ namespace DynamicSketchDataCollection
             string output = "";
             StrokeCollection topResult;
             StringBuilder topIndex, topLabel, topScore;
-            for (int i = 0; i < 20; ++i)
+            for (int i = 0; i < results.Count / 2; ++i)
             {
                 topResult = results[i];
 
