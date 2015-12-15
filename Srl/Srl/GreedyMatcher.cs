@@ -1,5 +1,4 @@
-﻿using Srl.Tools;
-using Srl.Xml;
+﻿using Srl.Xml;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,6 +9,8 @@ namespace Srl.Tools
 {
     public class GreedyMatcher
     {
+        #region Constructor
+
         public GreedyMatcher(int resampleSize, double scaleBounds, StylusPoint origin, SketchTools.ScaleType scaleType, SketchTools.TranslateType translateType, bool isWeighted)
         {
             myResampleSize = resampleSize;
@@ -20,209 +21,178 @@ namespace Srl.Tools
             myIsWeighted = isWeighted;
         }
 
+        #endregion
+
+        #region Match
+
         public void Train(string dirPath)
         {
-            // get the file paths
-            var filePaths = new List<string>();
-            foreach (var filePath in Directory.GetFiles(dirPath))
+            //
+            myTrainingData = new List<StrokeCollection>();
+            myTemplates = new List<StrokeCollection>();
+            myTemplateToDatum = new Dictionary<StrokeCollection, StrokeCollection>();
+
+            //
+            SketchXmlProcessor processor = new SketchXmlProcessor();
+            StrokeCollection trainingDatum, template;
+            List<StrokeCollection> sketches = new List<StrokeCollection>();
+            foreach (string filePath in Directory.GetFiles(dirPath))
             {
+                //  handle each file that is an XML file
                 if (filePath.EndsWith(".xml"))
                 {
-                    filePaths.Add(filePath);
+                    // convert the file to a sketch
+                    trainingDatum = processor.Read(filePath);
+                    myTrainingData.Add(trainingDatum);
+
+                    // normalize the sketch
+                    template = SketchTools.Normalize(SketchTools.Clone(trainingDatum), myResampleSize, myScaleBounds, myOrigin, myScaleType, myTranslateType);
+                    myTemplates.Add(template);
+
+                    // add new dictionary entry
+                    myTemplateToDatum.Add(template, trainingDatum);
                 }
             }
-
-            // get the raw training data
-            myTrainingData = new List<StrokeCollection>();
-            SketchXmlProcessor processor = new SketchXmlProcessor();
-            foreach (var filePath in filePaths)
-            {
-                myTrainingData.Add(processor.Read(filePath));
-            }
-
-            // normalize the training data into templates
-            myTemplates = new List<StrokeCollection>();
-            StrokeCollection template;
-            foreach (var train in myTrainingData)
-            {
-                template = SketchTools.Normalize(train,
-                    myResampleSize,
-                    myScaleBounds,
-                    myOrigin,
-                    SketchTools.ScaleType.Proportional,
-                    SketchTools.TranslateType.Median);
-
-                myTemplates.Add(template);
-            }
-
-            // set up the template to training dictionary pairs
-            myTemplateTrainingPairs = new Dictionary<StrokeCollection, StrokeCollection>();
-            for (int i = 0; i < myTrainingData.Count; ++i)
-            {
-                myTemplateTrainingPairs.Add(myTemplates[i], myTrainingData[i]);
-            }
         }
 
-        public void Run(StrokeCollection original)
+        public void Run(StrokeCollection test)
         {
             //
-            StrokeCollection input = SketchTools.Normalize(
-                SketchTools.Clone(original),
-                myResampleSize,
-                myScaleBounds,
-                myOrigin,
-                myScaleType,
-                myTranslateType);
-
-            // calculate the distance between input and shallow clone of templates
-            List<Tuple<StrokeCollection, double>> pairs
-                = Scores(input, new List<StrokeCollection>(myTemplates));
-
-            // sort the distance pairs
-            pairs.Sort((x, y) => y.Item2.CompareTo(x.Item2));
+            StrokeCollection input = SketchTools.Normalize(SketchTools.Clone(test), myResampleSize, myScaleBounds, myOrigin, myScaleType, myTranslateType);
 
             //
-            myResults = new List<StrokeCollection>();
             myLabels = new List<string>();
-            myScores = new Dictionary<StrokeCollection, double>();
+            myScoreEntries = new Dictionary<StrokeCollection, double>();
+            myResults = new List<StrokeCollection>();
 
             //
-            var template = new StrokeCollection();
-            string label = "";
-            double score = 0.0;
+            List<Tuple<StrokeCollection, double>> pairs = new List<Tuple<StrokeCollection, double>>();
+            double distance, distance1, distance2, score;
+            foreach (StrokeCollection template in myTemplates)
+            {
+                // calculate the template's score
+                distance1 = GreedyDistance(input, template);
+                distance2 = GreedyDistance(template, input);
+                distance = Math.Min(distance1, distance2);
+                score = 100.0 - (distance / (0.5 * (Math.Sqrt(myScaleBounds * myScaleBounds + myScaleBounds * myScaleBounds))));
+
+                // add the label, template+score pair, and score dictionary
+                pairs.Add(new Tuple<StrokeCollection, double>(template, score));
+            }
+
+            // get the sorted results in ascending order
+            pairs.Sort((x, y) => y.Item2.CompareTo(x.Item2));
             foreach (var pair in pairs)
             {
-                template = pair.Item1;
-                label = (string)template.GetPropertyData(SketchTools.LABEL_GUID);
-                score = pair.Item2;
+                //
+                StrokeCollection t = pair.Item1;
+                double s = pair.Item2;
 
-                myResults.Add(template);
-                myLabels.Add(label);
-                myScores.Add(template, score);
+                //
+                myResults.Add(t);
+                myLabels.Add((string)t.GetPropertyData(SketchTools.LABEL_GUID));
+                myScoreEntries.Add(t, s);
             }
         }
+
+        #endregion
 
         #region Accessors
 
-        public string Label()
-        {
-            return myLabels[0];
-        }
-
-        public List<string> Labels()
-        {
-            return myLabels;
-        }
-
-        public StrokeCollection Result()
-        {
-            return myResults[0];
-        }
-
-        public List<StrokeCollection> Results()
-        {
-            return myResults;
-        }
-
-        public double Score(StrokeCollection template)
-        {
-            return myScores[template];
-        }
-
-        public StrokeCollection TrainingData(StrokeCollection template)
-        {
-            return myTemplateTrainingPairs[template];
-        }
+        public string Label() { return myLabels[0]; }
+        public List<string> Labels() { return myLabels; }
+        public StrokeCollection Result() { return myResults[0]; }
+        public List<StrokeCollection> Results() { return myResults; }
+        public double Score(StrokeCollection template) { return myScoreEntries[template]; }
+        public StrokeCollection TrainingData(StrokeCollection template) { return myTemplateToDatum[template]; }
 
         #endregion
 
         #region Helper Methods
 
-        private List<Tuple<StrokeCollection, double>> Scores(StrokeCollection input, List<StrokeCollection> templates)
+        private double GreedyDistance(StrokeCollection alphaStrokes, StrokeCollection betaStrokes)
         {
-            var templateScoresPairs = new List<Tuple<StrokeCollection, double>>();
+            //
+            double distances = 0.0;
 
-            double distance, distance1, distance2;
-            double score;
-            foreach (var template in templates)
+            // get the alpha and beta points from their respective strokes
+            var alphaPoints = new StylusPointCollection();
+            var betaPoints = new StylusPointCollection();
+            foreach (var stroke in alphaStrokes)
             {
-                distance1 = Distance(input, template);
-                distance2 = Distance(template, input);
-                Console.WriteLine((string)template.GetPropertyData(SketchTools.LABEL_GUID) + ": "
-                    + distance1 + " | " + distance2);
-                distance = Math.Min(distance1, distance2);
-                score = 100.0 - (distance / (0.5 * (Math.Sqrt(myScaleBounds * myScaleBounds + myScaleBounds * myScaleBounds))));
-                templateScoresPairs.Add(new Tuple<StrokeCollection, double>(template, score));
+                alphaPoints.Add(stroke.StylusPoints);
+            }
+            foreach (var stroke in betaStrokes)
+            {
+                betaPoints.Add(stroke.StylusPoints);
             }
 
-            return templateScoresPairs;
-        }
-
-        private double Distance(StrokeCollection input, StrokeCollection template)
-        {
-            StylusPointCollection inputPoints = ToPoints(input);
-            StylusPointCollection templatePoints = ToPoints(template);
-
-            double minDistance;
-            StylusPoint minPoint;
-            double currentDistance, weight;
-            double distance = 0.0;
-            double index = 1;
-            foreach (var inputPoint in inputPoints)
+            // iterate through each alpha point
+            var pairs = new List<Tuple<StylusPoint, StylusPoint>>();
+            double minDistance, weight, distance;
+            int index;
+            StylusPoint minPoint = betaPoints[0];
+            foreach (var alphaPoint in alphaPoints)
             {
                 minDistance = Double.MaxValue;
-                minPoint = templatePoints[0];
-                foreach (var templatePoint in templatePoints)
+
+                // iterate through each beta point to find the min beta point to the alpha point
+                index = 1;
+                foreach (var betaPoint in betaPoints)
                 {
-                    currentDistance = SketchTools.Distance(inputPoint, templatePoint);
-                    if (currentDistance < minDistance)
+                    distance = SketchTools.Distance(alphaPoint, betaPoint);
+
+                    // update the min distance and min point
+                    if (minDistance > distance)
                     {
-                        minDistance = currentDistance;
-                        minPoint = templatePoint;
+                        minDistance = distance;
+                        minPoint = betaPoint;
                     }
                 }
 
-                weight = 1 - ((index - 1) / inputPoints.Count);
-                
+                // update distance between alpha and beta point lists
+                weight = 1 - ((index - 1) / alphaPoints.Count);
                 if (myIsWeighted)
                 {
-                    distance += minDistance * weight;
+                    distances += minDistance * weight;
                 }
                 else
                 {
-                    distance += minDistance;
+                    distances += minDistance;
                 }
-                
 
-                templatePoints.Remove(minPoint);
+                // pair the alpha point to the min beta point and remove min beta point from list of beta points
+                pairs.Add(new Tuple<StylusPoint, StylusPoint>(alphaPoint, minPoint));
+                betaPoints.Remove(minPoint);
+            }
+
+            //
+            return distances;
+        }
+
+        private string ToString(StrokeCollection sketch)
+        {
+            string output = "" + sketch.GetPropertyData(SketchTools.LABEL_GUID) + ":\n";
+
+            int index = 0;
+            foreach (Stroke stroke in sketch)
+            {
+                output += "Stroke #" + index;
+
+                foreach (StylusPoint point in stroke.StylusPoints)
+                {
+                    output += "   (" + point.X + ", " + point.Y + ")\n";
+                }
+
                 ++index;
             }
 
-            return distance;
-        }
-
-        private StylusPointCollection ToPoints(StrokeCollection strokes)
-        {
-            var points = new StylusPointCollection();
-
-            foreach (var stroke in strokes)
-            {
-                foreach (var point in stroke.StylusPoints)
-                {
-                    points.Add(point);
-                }
-            }
-
-            return points;
+            return output;
         }
 
         #endregion
 
-        #region Fields and Enum
-
-        private List<StrokeCollection> myTrainingData;
-        private List<StrokeCollection> myTemplates;
-        private Dictionary<StrokeCollection, StrokeCollection> myTemplateTrainingPairs;
+        #region Fields
 
         private int myResampleSize;
         private double myScaleBounds;
@@ -231,9 +201,13 @@ namespace Srl.Tools
         private SketchTools.TranslateType myTranslateType;
         private bool myIsWeighted;
 
+        private List<StrokeCollection> myTrainingData;
+        private List<StrokeCollection> myTemplates;
+        private Dictionary<StrokeCollection, StrokeCollection> myTemplateToDatum;
+
         private List<StrokeCollection> myResults;
         private List<string> myLabels;
-        private Dictionary<StrokeCollection, double> myScores;
+        private Dictionary<StrokeCollection, double> myScoreEntries;
 
         #endregion
     }

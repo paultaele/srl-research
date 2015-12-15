@@ -52,7 +52,12 @@ namespace DualSketchDataViewer
             Transform();
         }
 
-        private void MyMappingButton_Click(object sender, RoutedEventArgs e)
+        private void MyDirectButton_Click(object sender, RoutedEventArgs e)
+        {
+            Transform();
+        }
+
+        private void MyInverseMapButton_Click(object sender, RoutedEventArgs e)
         {
             Transform();
         }
@@ -130,7 +135,7 @@ namespace DualSketchDataViewer
             }
 
             var items = new List<string>();
-            items.AddRange(myMainSketches.Keys);
+            items.AddRange(myOtherSketches.Keys);
             MyOtherListBox.ItemsSource = items;
             MyOtherListBox.SelectedIndex = 0;
 
@@ -247,10 +252,23 @@ namespace DualSketchDataViewer
             SetStrokeProperties(main, SKETCH_BRUSH_SIZE, MAIN_BRUSH_COLOR);
             MyCanvas.Strokes.Add(main);
 
-            if (MyResampleButton.IsChecked.Value && MyMappingButton.IsChecked.Value)
+            if (MyResampleButton.IsChecked.Value)
             {
-                StrokeCollection mapStrokes = MappingStrokes(main, other);
-                MyCanvas.Strokes.Add(mapStrokes);
+                if (MyDirectMapButton.IsChecked.Value)
+                {
+                    StrokeCollection mapStrokes = MapStrokes(main, other, DIRECT_MAP_BRUSH_COLOR);
+                    MyCanvas.Strokes.Add(mapStrokes);
+                }
+
+                if (MyInverseMapButton.IsChecked.Value)
+                {
+                    StrokeCollection mapStrokes = MapStrokes(other, main, INVERSE_MAP_BRUSH_COLOR);
+                    MyCanvas.Strokes.Add(mapStrokes);
+                }
+            }
+            else
+            {
+                MyStatsBlock.Text = "";
             }
             if (MyDisplayPointsButton.IsChecked.Value)
             {
@@ -301,52 +319,58 @@ namespace DualSketchDataViewer
             return displayPoints;
         }
 
-        private StrokeCollection MappingStrokes(StrokeCollection main, StrokeCollection other)
+        private StrokeCollection MapStrokes(StrokeCollection alphaStrokes, StrokeCollection betaStrokes, Color color)
         {
-            //
-            var mainPoints = new StylusPointCollection();
-            var otherPoints = new StylusPointCollection();
-            foreach (var stroke in main)
+            // get the alpha and beta points from their respective strokes
+            var alphaPoints = new StylusPointCollection();
+            var betaPoints = new StylusPointCollection();
+            foreach (var stroke in alphaStrokes)
             {
-                mainPoints.Add(stroke.StylusPoints);
+                alphaPoints.Add(stroke.StylusPoints);
             }
-            foreach (var stroke in other)
+            foreach (var stroke in betaStrokes)
             {
-                otherPoints.Add(stroke.StylusPoints);
+                betaPoints.Add(stroke.StylusPoints);
             }
 
-            //
+            // iterate through each alpha point
             var pairs = new List<Tuple<StylusPoint, StylusPoint>>();
             double minDistance, distance;
-            StylusPoint minPoint = otherPoints[0];
-            foreach (var mainPoint in mainPoints)
+            double totalDistance = 0.0;
+            StylusPoint minPoint = betaPoints[0];
+            foreach (var alphaPoint in alphaPoints)
             {
                 minDistance = Double.MaxValue;
 
-                foreach (var otherPoint in otherPoints)
+                // iterate through each beta point to find the min beta point to the alpha point
+                foreach (var betaPoint in betaPoints)
                 {
-                    distance = SketchTools.Distance(mainPoint, otherPoint);
+                    distance = SketchTools.Distance(alphaPoint, betaPoint);
 
+                    // update the min distance and min point
                     if (minDistance > distance)
                     {
                         minDistance = distance;
-                        minPoint = otherPoint;
+                        minPoint = betaPoint;
                     }
                 }
+                totalDistance = minDistance;
 
-                pairs.Add(new Tuple<StylusPoint, StylusPoint>(mainPoint, minPoint));
-                otherPoints.Remove(minPoint);
+                // pair the alpha point to the min beta point and remove min beta point from list of beta points
+                pairs.Add(new Tuple<StylusPoint, StylusPoint>(alphaPoint, minPoint));
+                betaPoints.Remove(minPoint);
             }
+            MyStatsBlock.Text += "DISTANCE: " + Math.Round(totalDistance, 2) + "\n";
 
-            //
+            // create map strokes between each minimum alpha-beta points
             var mapStrokes = new StrokeCollection();
             foreach (var pair in pairs)
             {
                 Stroke stroke = new Stroke(new StylusPointCollection() { pair.Item1, pair.Item2 });
-                SetStrokeProperties(stroke, MAP_BRUSH_SIZE, MAP_BRUSH_COLOR);
+                SetStrokeProperties(stroke, MAP_BRUSH_SIZE, color);
                 mapStrokes.Add(stroke);
             }
-
+            
             return mapStrokes;
         }
 
@@ -364,7 +388,8 @@ namespace DualSketchDataViewer
         public static readonly Color OTHER_BRUSH_COLOR = Colors.Blue;
         public static readonly Color MAIN_POINT_BRUSH_COLOR = Colors.Gray;
         public static readonly Color OTHER_POINT_BRUSH_COLOR = Colors.Green;
-        public static readonly Color MAP_BRUSH_COLOR = Colors.Red;
+        public static readonly Color DIRECT_MAP_BRUSH_COLOR = Colors.Red;
+        public static readonly Color INVERSE_MAP_BRUSH_COLOR = Colors.Orange;
 
         public static readonly int[] RESAMPLE_SIZE = new int[] { 16, 32, 64, 128, 256 };
         public static readonly int[] SCALE_SIZE = new int[] { 300, 400, 500, 600 };

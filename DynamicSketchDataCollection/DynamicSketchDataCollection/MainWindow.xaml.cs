@@ -38,16 +38,11 @@ namespace DynamicSketchDataCollection
             MyCanvasBorder.Width = MyCanvasBorder.Height = length;
             MyButtonsBorder.Width = MyLabelImageBorder.Width = length;
 
-            // set up the classifier
-            myResampleSize = 128;
-            myScaleBounds = 500.0;
-            myOrigin = new StylusPoint(length / 2.0, length / 2.0);
-            myScaleType = SketchTools.ScaleType.Hybrid;
-            myTranslateType = SketchTools.TranslateType.Centroid;
-            myMatcher = new GreedyMatcher(myResampleSize, myScaleBounds, myOrigin, myScaleType, myTranslateType, false);
-
             // initialize an empty list of strokes
             myStrokes = new StrokeCollection();
+
+            //
+            myMatcher = new GreedyMatcher(RESAMPLE_SIZE, SCALE_BOUNDS, ORIGIN, SCALE_TYPE, TRANSLATE_TYPE, WEIGHTED);
 
             // set the stylus and mouse state flags
             IsStylusMove = false;
@@ -575,18 +570,20 @@ namespace DynamicSketchDataCollection
         private StrokeCollection myStrokes;
         private long myTimeOffset;
 
-        private GreedyMatcher myMatcher;
-        private int myResampleSize;
-        private double myScaleBounds;
-        private StylusPoint myOrigin;
-        private SketchTools.ScaleType myScaleType;
-        private SketchTools.TranslateType myTranslateType;
-
         private List<string> myLabels;
         private Dictionary<string, Image> myImageDictionary;
         private int myIndexer;
 
-        public static readonly double BRUSH_LENGTH = 5.0;
+        private GreedyMatcher myMatcher;
+
+        public static readonly int RESAMPLE_SIZE = 128;
+        public static readonly double SCALE_BOUNDS = 500;
+        public static readonly StylusPoint ORIGIN = new StylusPoint(0.0, 0.0);
+        public static readonly SketchTools.ScaleType SCALE_TYPE = SketchTools.ScaleType.Hybrid;
+        public static readonly SketchTools.TranslateType TRANSLATE_TYPE = SketchTools.TranslateType.Centroid;
+        public static readonly bool WEIGHTED = true;
+
+        public static readonly double BRUSH_LENGTH = 10.0;
         public static readonly Color BRUSH_IMAGE_OFF_COLOR = Colors.Black;
         public static readonly Color BRUSH_IMAGE_ON_COLOR = Colors.Red;
 

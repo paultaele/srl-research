@@ -70,7 +70,7 @@
                     <InkCanvas Name="MyCanvas" IsEnabled="False" StylusMove="MyCanvas_StylusMove" StylusButtonDown="MyCanvas_StylusButtonDown" StylusButtonUp="MyCanvas_StylusButtonUp"
                            PreviewMouseMove="MyCanvas_PreviewMouseMove" PreviewMouseDown="MyCanvas_PreviewMouseDown" PreviewMouseUp="MyCanvas_PreviewMouseUp">
                         <InkCanvas.DefaultDrawingAttributes>
-                            <DrawingAttributes Width="5" Height="5" Color="Red"/>
+                            <DrawingAttributes Width="10" Height="10" Color="Red"/>
                         </InkCanvas.DefaultDrawingAttributes>
                     </InkCanvas>
                 </Border>
