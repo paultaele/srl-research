@@ -42,7 +42,10 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BaseMatcher.cs" />
     <Compile Include="GreedyMatcher.cs" />
+    <Compile Include="LazyMatcher.cs" />
+    <Compile Include="Matcher.cs" />
     <Compile Include="SketchTools.cs" />
     <Compile Include="SketchXmlProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
