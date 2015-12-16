@@ -26,8 +26,8 @@ namespace DynamicSketchDataCollection
 
             // set up the window size
             WindowState = WindowState.Maximized;
-            WindowStyle = WindowStyle.ThreeDBorderWindow;
-            ResizeMode = ResizeMode.NoResize;
+            //WindowStyle = WindowStyle.ThreeDBorderWindow;
+            //ResizeMode = ResizeMode.NoResize;
         }
 
         private void MyWindow_Loaded(object sender, RoutedEventArgs e)
@@ -42,7 +42,7 @@ namespace DynamicSketchDataCollection
             myStrokes = new StrokeCollection();
 
             //
-            myMatcher = new GreedyMatcher(RESAMPLE_SIZE, SCALE_BOUNDS, ORIGIN, SCALE_TYPE, TRANSLATE_TYPE, WEIGHTED);
+            myMatcher = new GreedyMatcher(RESAMPLE_SIZE, SCALE_BOUNDS, ORIGIN, SCALE_TYPE, TRANSLATE_TYPE);
 
             // set the stylus and mouse state flags
             IsStylusMove = false;
