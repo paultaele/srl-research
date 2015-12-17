@@ -16,8 +16,8 @@
         <Menu Name="MyMenu" Grid.Row="0" Panel.ZIndex="1">
             <MenuItem Header="_File">
                 <MenuItem Header="_Load..." Name="MyLoadItem" Click="MyLoadItem_Click"/>
-                <Separator/>
-                <MenuItem Header="_Save..." Name="MySaveItem" Click="MySaveItem_Click"/>
+                <!--<Separator/>
+                <MenuItem Header="_Save..." Name="MySaveItem" Click="MySaveItem_Click"/>-->
                 <Separator/>
                 <MenuItem Header="_Exit" Name="MyExitItem" Click="MyExitItem_Click"/>
             </MenuItem>
@@ -98,6 +98,8 @@
 
                             <Button Grid.Column="1" Name="MyUndoButton" Click="MyUndoButton_Click" Content="⟲" Background="Transparent" BorderBrush="Transparent" FontSize="30" IsEnabled="False"/>
 
+                            <Button Grid.Column="2" Name="MySaveButton" Click="MySaveButton_Click" Content="★" Background="Transparent" BorderBrush="Transparent" FontSize="30" IsEnabled="False"/>
+                            
                             <Button Grid.Column="3" Name="MyCheckButton" Click="MyCheckButton_Click" Content="✓" Background="Transparent" BorderBrush="Transparent" FontSize="30" IsEnabled="False"/>
 
                         </Grid>

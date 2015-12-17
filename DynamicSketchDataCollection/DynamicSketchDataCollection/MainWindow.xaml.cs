@@ -1,5 +1,6 @@
 ﻿using Ookii.Dialogs.Wpf;
 using Srl.Tools;
+using Srl.Xml;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -67,11 +68,6 @@ namespace DynamicSketchDataCollection
             MyLoadPanel.Visibility = Visibility.Visible;
         }
 
-        private void MySaveItem_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
         private void MyExitItem_Click(object sender, RoutedEventArgs e)
         {
             Application.Current.Shutdown();
@@ -94,6 +90,7 @@ namespace DynamicSketchDataCollection
 
             //
             MyLoadDataBox.Text = dialog.SelectedPath;
+            myLoadPath = dialog.SelectedPath;
         }
 
         private void MyLoadImagesButton_Click(object sender, RoutedEventArgs e)
@@ -242,6 +239,46 @@ namespace DynamicSketchDataCollection
             MyOutputBlock.Text = output;
         }
 
+        private void MySaveButton_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBoxResult result = MessageBox.Show("Really save this sketch?", "Save", MessageBoxButton.YesNo);
+            if (result == MessageBoxResult.No)
+            {
+                return;
+            }
+
+            //
+            string dirPath = MyLoadDataBox.Text + Path.DirectorySeparatorChar.ToString();
+            string label = MyLabelBlock.Text;
+
+            //
+            int count = 0;
+            string fileName = "";
+            string saveName = "";
+            foreach (string filePath in Directory.GetFiles(dirPath))
+            {
+                fileName = Path.GetFileName(filePath);
+
+                if (fileName.StartsWith(label) && fileName.EndsWith(".xml"))
+                {
+                    ++count;
+                    saveName = Path.GetFileNameWithoutExtension(filePath);
+                    saveName = dirPath + saveName.Substring(0, saveName.Length - 3);
+                }
+            }
+
+            //
+            string countString = count.ToString();
+            string savePath = saveName + countString.PadLeft(3, '0') + ".xml";
+
+            //
+            SketchXmlProcessor processor = new SketchXmlProcessor();
+            processor.Write(savePath, label, myStrokes);
+
+            //
+            myMatcher.Train(myLoadPath);
+        }
+
         private void MyClearButton_Click(object sender, RoutedEventArgs e)
         {
             // clear the strokes from the canvas
@@ -354,6 +391,7 @@ namespace DynamicSketchDataCollection
 
         private void EnableButtons(bool enable)
         {
+            MySaveButton.IsEnabled = enable;
             MyCheckButton.IsEnabled = enable;
             MyClearButton.IsEnabled = enable;
             MyUndoButton.IsEnabled = enable;
@@ -581,6 +619,8 @@ namespace DynamicSketchDataCollection
         private int myIndexer;
 
         private GreedyMatcher myMatcher;
+
+        private string myLoadPath;
 
         public static readonly int RESAMPLE_SIZE = 128;
         public static readonly double SCALE_BOUNDS = 500;
