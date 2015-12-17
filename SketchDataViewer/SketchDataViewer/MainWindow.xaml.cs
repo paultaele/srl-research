@@ -28,6 +28,9 @@ namespace SketchDataViewer
         private void MyWindow_Loaded(object sender, RoutedEventArgs e)
         {
             HasLoaded = false;
+
+            MyCanvasBorder.Width = MyCanvasBorder.ActualWidth;
+            MyButtonsBorder.Width = MyCanvasBorder.ActualWidth;
         }
 
         private void MyLoadMenu_Click(object sender, RoutedEventArgs e)
@@ -41,12 +44,14 @@ namespace SketchDataViewer
             
             // get the images directory path
             Symbols = new List<StrokeCollection>();
+            FilePaths = new List<string>();
             var processor = new SketchXmlProcessor();
             foreach (var filePath in Directory.GetFiles(dialog.SelectedPath))
             {
                 if (filePath.EndsWith("xml"))
                 {
                     Symbols.Add(processor.Read(filePath));
+                    FilePaths.Add(filePath);
                 }
             }
 
@@ -61,6 +66,10 @@ namespace SketchDataViewer
             Index = 0;
             MyPrevButton.IsEnabled = false;
             MyNextButton.IsEnabled = (Symbols.Count > 1);
+
+            //
+            MyLabelBlock.Text = (string)Symbols[Index].GetPropertyData(SketchTools.LABEL_GUID);
+            MyFileNameBlock.Text = Path.GetFileName((string)FilePaths[Index]);
 
             //
             Transform();
@@ -239,6 +248,10 @@ namespace SketchDataViewer
             MyNextButton.IsEnabled = true;
 
             Transform();
+
+            //
+            MyLabelBlock.Text = (string)Symbols[Index].GetPropertyData(SketchTools.LABEL_GUID);
+            MyFileNameBlock.Text = Path.GetFileName((string)FilePaths[Index]);
         }
 
         private void MyNextButton_Click(object sender, RoutedEventArgs e)
@@ -251,6 +264,10 @@ namespace SketchDataViewer
             MyPrevButton.IsEnabled = true;
 
             Transform();
+
+            //
+            MyLabelBlock.Text = (string)Symbols[Index].GetPropertyData(SketchTools.LABEL_GUID);
+            MyFileNameBlock.Text = Path.GetFileName((string)FilePaths[Index]);
         }
 
         private void MyScaleHybridButton_Click(object sender, RoutedEventArgs e)
@@ -291,6 +308,12 @@ namespace SketchDataViewer
         }
 
         private List<StrokeCollection> Symbols
+        {
+            get;
+            set;
+        }
+
+        private List<string> FilePaths
         {
             get;
             set;
