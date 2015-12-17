@@ -48,7 +48,7 @@
 
                 <Separator Margin="50,10,50,10"  Background="Black" />
 
-                <CheckBox Name="MyDisplayPointsButton" Click="MyDisplayPointsButton_Click"  IsEnabled="True" FontSize="20" FontWeight="Bold" Margin="10">Display Points</CheckBox>
+                <CheckBox x:Name="MyHideStrokesButton" Click="MyHideStrokesButton_Click"  IsEnabled="True" FontSize="20" FontWeight="Bold" Margin="10" Content="Hide Strokes"/>
             </StackPanel>
 
             <Border Grid.Row="1" BorderBrush="Black" BorderThickness="5" Background="LightGray" Margin="20">

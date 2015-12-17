@@ -103,7 +103,7 @@ namespace DualSketchDataViewer
         }
 
 
-        private void MyDisplayPointsButton_Click(object sender, RoutedEventArgs e)
+        private void MyHideStrokesButton_Click(object sender, RoutedEventArgs e)
         {
             Transform();
         }
@@ -270,18 +270,29 @@ namespace DualSketchDataViewer
             {
                 MyStatsBlock.Text = "";
             }
-            if (MyDisplayPointsButton.IsChecked.Value)
+            if (MyHideStrokesButton.IsChecked.Value)
             {
-                var mainDispayPoints = DisplayPoints(main, POINT_BUSH_SIZE, MAIN_POINT_BRUSH_COLOR);
-                var otherDispayPoints = DisplayPoints(other, POINT_BUSH_SIZE, OTHER_POINT_BRUSH_COLOR);
+                //var mainDispayPoints = DisplayPoints(main, POINT_BUSH_SIZE, MAIN_POINT_BRUSH_COLOR);
+                //var otherDispayPoints = DisplayPoints(other, POINT_BUSH_SIZE, OTHER_POINT_BRUSH_COLOR);
 
-                foreach (var displayPoint in mainDispayPoints)
+                //foreach (var displayPoint in mainDispayPoints)
+                //{
+                //    MyCanvas.Strokes.Add(displayPoint);
+                //}
+                //foreach (var displayPoint in otherDispayPoints)
+                //{
+                //    MyCanvas.Strokes.Add(displayPoint);
+                //}
+
+                //MyCanvas.Strokes.Remove(main);
+                //MyCanvas.Strokes.Remove(other);
+                foreach (Stroke stroke in main)
                 {
-                    MyCanvas.Strokes.Add(displayPoint);
+                    stroke.DrawingAttributes.Color = Colors.Transparent;
                 }
-                foreach (var displayPoint in otherDispayPoints)
+                foreach (Stroke stroke in other)
                 {
-                    MyCanvas.Strokes.Add(displayPoint);
+                    stroke.DrawingAttributes.Color = Colors.Transparent;
                 }
             }
         }

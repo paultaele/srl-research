@@ -112,6 +112,12 @@ namespace DynamicSketchDataCollection
 
         private void MyLoadOkButton_Click(object sender, RoutedEventArgs e)
         {
+            // reset
+            myIndexer = 0;
+            MyBackButton.IsEnabled = false;
+            MyNextButton.IsEnabled = false;
+            MyCanvas.Children.Clear();
+
             // check directories
             string dataDirPath = MyLoadDataBox.Text;
             string imagesDirPath = MyLoadImagesBox.Text;

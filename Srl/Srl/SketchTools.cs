@@ -71,8 +71,8 @@ namespace Srl.Tools
                 StylusPointCollection newPoints = new StylusPointCollection();
                 newPoints.Add(points[0]);
                 ++pointCount;
-                List<int> newTimes = new List<int>();
-                newTimes.Add(0);
+                //List<int> newTimes = new List<int>();
+                //newTimes.Add(0);
 
                 //
                 bool isDone = false;
@@ -89,7 +89,9 @@ namespace Srl.Tools
                         {
                             newPoints.Add(q);
                             ++pointCount;
-                            newTimes.Add(i);
+
+                            //newTimes.Add(i);
+
                             points.Insert(i, q);
                             D = 0.0;
                         }
@@ -112,13 +114,37 @@ namespace Srl.Tools
 
                 //
                 Stroke newStroke = new Stroke(newPoints);
-                newStroke.AddPropertyData(TIMES_GUID, newTimes.ToArray());
+                //newStroke.AddPropertyData(TIMES_GUID, newTimes.ToArray());
                 newStrokes.Add(newStroke);
             }
 
-            //
+            // add the label
             string label = (string)strokes.GetPropertyData(LABEL_GUID);
             newStrokes.AddPropertyData(LABEL_GUID, label);
+
+            // add the times
+            int[] oldTimes, newTimes;
+            double ratio;
+            int index;
+            for (int i = 0; i < strokes.Count; ++i)
+            {
+                // get the old times and initialize the new times
+                oldTimes = (int[])strokes[i].GetPropertyData(SketchTools.TIMES_GUID);
+                newTimes = new int[newStrokes[i].StylusPoints.Count];
+
+                ratio = (double)oldTimes.Length / (double)newTimes.Length;
+                newTimes[0] = oldTimes[0];
+
+                for (int j = 1; j < newTimes.Length - 1; ++j)
+                {
+                    index = (int)(j * ratio);
+                    newTimes[j] = oldTimes[index];
+                }
+                newTimes[newTimes.Length - 1] = oldTimes[oldTimes.Length - 1];
+
+                newStrokes[i].AddPropertyData(SketchTools.TIMES_GUID, newTimes);
+            }
+
             return newStrokes;
         }
 
