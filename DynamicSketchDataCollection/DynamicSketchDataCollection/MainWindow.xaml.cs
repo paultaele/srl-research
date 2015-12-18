@@ -45,13 +45,15 @@ namespace DynamicSketchDataCollection
             //
             myMatcher = new GreedyMatcher(RESAMPLE_SIZE, SCALE_BOUNDS, ORIGIN, SCALE_TYPE, TRANSLATE_TYPE);
 
-            // set the stylus and mouse state flags
+            // set the stylus and mouse state flags and states
             IsStylusMove = false;
             IsStylusEnd = false;
             IsMouseDown = false;
             IsMouseMove = false;
             IsMouseUp = false;
             IsMouseReady = false;
+            PreviousStylusState = StylusState.StylusUp;
+            PreviousMouseState = MouseState.MouseUp;
 
             // add mouse button event handlers to the canvas for mouse up, mouse down, and mouse move
             MyCanvas.AddHandler(InkCanvas.MouseDownEvent, new MouseButtonEventHandler(MyCanvas_PreviewMouseDown), true);
@@ -272,6 +274,12 @@ namespace DynamicSketchDataCollection
             string savePath = saveName + countString.PadLeft(3, '0') + ".xml";
 
             //
+            foreach(Stroke stroke in myStrokes)
+            {
+                StylusPointCollection points = stroke.StylusPoints;
+                int[] times = (int[])stroke.GetPropertyData(SketchTools.TIMES_GUID);
+            }
+
             SketchXmlProcessor processor = new SketchXmlProcessor();
             processor.Write(savePath, label, myStrokes);
 
@@ -403,13 +411,19 @@ namespace DynamicSketchDataCollection
 
         private void MyCanvas_StylusButtonDown(object sender, StylusButtonEventArgs e)
         {
-            // update the stylus interaction flags
+            // update and check the stylus interaction flags
             IsStylusMove = true;
+            if (PreviousStylusState == StylusState.StylusMove || PreviousStylusState == StylusState.StylusDown)
+            {
+                return;
+            }
+            PreviousStylusState = StylusState.StylusDown;
 
             // initialize the points and times
             myPoints = new StylusPointCollection();
             myTimes = new List<int>();
             myTimeOffset = 0;
+
 
             // update the stroke with the initial x, y, and time
             UpdateStroke(
@@ -425,6 +439,13 @@ namespace DynamicSketchDataCollection
 
         private void MyCanvas_StylusMove(object sender, StylusEventArgs e)
         {
+            // update and check the stylus interaction flags
+            if (PreviousStylusState == StylusState.StylusUp)
+            {
+                return;
+            }
+            PreviousStylusState = StylusState.StylusMove;
+
             // update the stroke with the current x, y, and time
             UpdateStroke(
                 e.GetPosition(MyCanvas).X,
@@ -436,9 +457,14 @@ namespace DynamicSketchDataCollection
 
         private void MyCanvas_StylusButtonUp(object sender, StylusButtonEventArgs e)
         {
-            // update the stylus interaction flags
+            // update and check the stylus interaction flags
             IsStylusMove = false;
             IsStylusEnd = true;
+            if (PreviousStylusState == StylusState.StylusUp)
+            {
+                return;
+            }
+            PreviousStylusState = StylusState.StylusUp;
 
             // update the stroke with the final x, y, and time
             UpdateStroke(
@@ -448,19 +474,27 @@ namespace DynamicSketchDataCollection
                 myTimes,
                 false);
 
-            // add stroke to the list
+            // set the stroke and times
             Stroke stroke = new Stroke(myPoints);
-            stroke.AddPropertyData(SketchTools.TIMES_GUID, myTimes.ToArray());
+            int[] times = myTimes.ToArray();
+
+            // add the times and stroke
+            stroke.AddPropertyData(SketchTools.TIMES_GUID, times);
             myStrokes.Add(stroke);
         }
 
         private void MyCanvas_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
-            // update the stylus interaction flags
+            // update and check the preview mouse interaction flags
             IsMouseDown = !IsMouseDown;
             IsMouseMove = false;
             if (!IsMouseDown) { return; }
             if (IsStylusMove) { return; }
+            if (PreviousMouseState == MouseState.MouseMove || PreviousMouseState == MouseState.MouseDown)
+            {
+                return;
+            }
+            PreviousMouseState = MouseState.MouseDown;
 
             // initialize the points and times
             myPoints = new StylusPointCollection();
@@ -481,13 +515,18 @@ namespace DynamicSketchDataCollection
 
         private void MyCanvas_PreviewMouseMove(object sender, MouseEventArgs e)
         {
-            // update the stylus interaction flags
+            // update and check the preview mouse interaction flags
             if (myPoints == null) { return; }
             if (e.LeftButton != MouseButtonState.Pressed) { return; }
             if (IsMouseDown) { return; }
             if (!IsMouseMove) { IsMouseMove = true; return; }
             if (!IsMouseReady) { IsMouseReady = true; return; }
             if (IsStylusMove) { return; }
+            if (PreviousMouseState == MouseState.MouseUp)
+            {
+                return;
+            }
+            PreviousMouseState = MouseState.MouseMove;
 
             // update the stroke with the current x, y, and time
             UpdateStroke(
@@ -500,12 +539,17 @@ namespace DynamicSketchDataCollection
 
         private void MyCanvas_PreviewMouseUp(object sender, MouseButtonEventArgs e)
         {
-            // update the stylus interaction flags
+            // update and check the preview mouse interaction flags
             if (myPoints == null) { return; }
             IsMouseUp = !IsMouseUp;
             if (IsMouseUp) { return; }
             if (IsStylusMove) { return; }
             if (IsStylusEnd) { IsStylusEnd = false; return; }
+            if (PreviousMouseState == MouseState.MouseUp)
+            {
+                return;
+            }
+            PreviousMouseState = MouseState.MouseUp;
 
             // update the stroke with the final x, y, and time
             UpdateStroke(
@@ -515,9 +559,12 @@ namespace DynamicSketchDataCollection
                 myTimes,
                 false);
 
-            // add the stroke to the list
+            // set the stroke and times
             Stroke stroke = new Stroke(myPoints);
-            stroke.AddPropertyData(SketchTools.TIMES_GUID, myTimes.ToArray());
+            int[] times = myTimes.ToArray();
+
+            // add the times and stroke
+            stroke.AddPropertyData(SketchTools.TIMES_GUID, times);
             myStrokes.Add(stroke);
         }
 
@@ -541,9 +588,10 @@ namespace DynamicSketchDataCollection
 
             // convert time to int
             int time = (int)fullTime;
+            StylusPoint point = new StylusPoint(x, y);
 
             // add the point and time to their respective lists
-            points.Add(new StylusPoint(x, y));
+            points.Add(point);
             times.Add(time);
         }
 
@@ -596,7 +644,7 @@ namespace DynamicSketchDataCollection
 
         #endregion
 
-        #region Stylus and Mouse Flags
+        #region Stylus and Mouse Flags and Enums
 
         private bool IsStylusMove { get; set; }
         private bool IsStylusEnd { get; set; }
@@ -604,6 +652,10 @@ namespace DynamicSketchDataCollection
         private bool IsMouseMove { get; set; }
         private bool IsMouseUp { get; set; }
         private bool IsMouseReady { get; set; }
+        private StylusState PreviousStylusState { get; set; }
+        private MouseState PreviousMouseState { get; set; }
+        private enum StylusState { StylusDown, StylusMove, StylusUp }
+        private enum MouseState { MouseDown, MouseMove, MouseUp }
 
         #endregion
 
