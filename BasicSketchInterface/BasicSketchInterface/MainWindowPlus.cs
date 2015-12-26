@@ -13,6 +13,8 @@ namespace BasicSketchInterface
 
         private void MyCanvas_StylusButtonDown(object sender, StylusButtonEventArgs e)
         {
+            #region Boilerplate Code
+
             // update and check the stylus interaction flags
             IsStylusMove = true;
             if (PreviousStylusState == StylusState.StylusMove || PreviousStylusState == StylusState.StylusDown)
@@ -26,6 +28,7 @@ namespace BasicSketchInterface
             myTimes = new List<int>();
             myTimeOffset = 0;
 
+            #endregion
 
             // update the stroke with the initial x, y, and time
             UpdateStroke(
@@ -41,12 +44,16 @@ namespace BasicSketchInterface
 
         private void MyCanvas_StylusMove(object sender, StylusEventArgs e)
         {
+            #region Boilerplate Code
+
             // update and check the stylus interaction flags
             if (PreviousStylusState == StylusState.StylusUp)
             {
                 return;
             }
             PreviousStylusState = StylusState.StylusMove;
+
+            #endregion
 
             // update the stroke with the current x, y, and time
             UpdateStroke(
@@ -59,6 +66,8 @@ namespace BasicSketchInterface
 
         private void MyCanvas_StylusButtonUp(object sender, StylusButtonEventArgs e)
         {
+            #region Boilerplate Code
+
             // update and check the stylus interaction flags
             IsStylusMove = false;
             IsStylusEnd = true;
@@ -67,6 +76,8 @@ namespace BasicSketchInterface
                 return;
             }
             PreviousStylusState = StylusState.StylusUp;
+
+            #endregion
 
             // update the stroke with the final x, y, and time
             UpdateStroke(
@@ -87,6 +98,8 @@ namespace BasicSketchInterface
 
         private void MyCanvas_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
+            #region Boilerplate Code
+
             // update and check the preview mouse interaction flags
             IsMouseDown = !IsMouseDown;
             IsMouseMove = false;
@@ -97,6 +110,8 @@ namespace BasicSketchInterface
                 return;
             }
             PreviousMouseState = MouseState.MouseDown;
+
+            #endregion
 
             // initialize the points and times
             myPoints = new StylusPointCollection();
@@ -117,6 +132,8 @@ namespace BasicSketchInterface
 
         private void MyCanvas_PreviewMouseMove(object sender, MouseEventArgs e)
         {
+            #region Boilerplate Code
+
             // update and check the preview mouse interaction flags
             if (myPoints == null) { return; }
             if (e.LeftButton != MouseButtonState.Pressed) { return; }
@@ -130,6 +147,8 @@ namespace BasicSketchInterface
             }
             PreviousMouseState = MouseState.MouseMove;
 
+            #endregion
+
             // update the stroke with the current x, y, and time
             UpdateStroke(
                 e.GetPosition(MyCanvas).X,
@@ -141,6 +160,8 @@ namespace BasicSketchInterface
 
         private void MyCanvas_PreviewMouseUp(object sender, MouseButtonEventArgs e)
         {
+            #region Boilerplate Code
+
             // update and check the preview mouse interaction flags
             if (myPoints == null) { return; }
             IsMouseUp = !IsMouseUp;
@@ -152,6 +173,8 @@ namespace BasicSketchInterface
                 return;
             }
             PreviousMouseState = MouseState.MouseUp;
+
+            #endregion
 
             // update the stroke with the final x, y, and time
             UpdateStroke(
@@ -170,6 +193,21 @@ namespace BasicSketchInterface
             myStrokes.Add(stroke);
         }
 
+        private void MyCanvas_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            // remove the latest automatic stroke added to the canvas
+            MyCanvas.Strokes.RemoveAt(MyCanvas.Strokes.Count - 1);
+
+            // set the visual settings of the replacement manual stroke
+            Stroke stroke = myStrokes[myStrokes.Count - 1];
+            stroke.DrawingAttributes.Width = MyCanvas.DefaultDrawingAttributes.Width;
+            stroke.DrawingAttributes.Height = MyCanvas.DefaultDrawingAttributes.Height;
+            stroke.DrawingAttributes.Color = MyCanvas.DefaultDrawingAttributes.Color;
+
+            // add the latest manual stroke to the canvas
+            MyCanvas.Strokes.Add(stroke);
+        }
+
         #endregion
 
         #region Button Interactions
@@ -186,12 +224,23 @@ namespace BasicSketchInterface
         private void MyUndoButton_Click(object sender, RoutedEventArgs e)
         {
             // case: there are strokes on the canvas
+            //if (MyCanvas.Strokes.Count > 0)
+            //{
+            //    // remove the most recent stroke added from the canvas
+            //    MyCanvas.Strokes.RemoveAt(MyCanvas.Strokes.Count - 1);
+
+            //    // remove the most recent stroke added from the list of strokes
+            //    myStrokes.RemoveAt(myStrokes.Count - 1);
+            //}
             if (MyCanvas.Strokes.Count > 0)
             {
-                // remove the most recent stroke added from the canvas
-                MyCanvas.Strokes.RemoveAt(MyCanvas.Strokes.Count - 1);
+                // retrieve the last stroke added
+                Stroke undoStroke = myStrokes[myStrokes.Count - 1];
 
-                // remove the most recent stroke added from the list of strokes
+                // remove the last stroke added to the canvas
+                MyCanvas.Strokes.Remove(undoStroke);
+
+                // remove the last stroke added from the list of strokes
                 myStrokes.RemoveAt(myStrokes.Count - 1);
             }
 
@@ -232,7 +281,10 @@ namespace BasicSketchInterface
 
         private void ClearStrokes()
         {
-            MyCanvas.Strokes.Clear();
+            foreach (Stroke stroke in myStrokes)
+            {
+                MyCanvas.Strokes.Remove(stroke);
+            }
             myStrokes = new StrokeCollection();
         }
 

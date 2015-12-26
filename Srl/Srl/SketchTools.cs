@@ -470,9 +470,8 @@ namespace Srl.Tools
 
         public static StrokeCollection Clone(StrokeCollection others)
         {
-            // get GUIDs
+            // get GUID
             Guid labelGuid = SketchTools.LABEL_GUID;
-            Guid timesGuid = SketchTools.TIMES_GUID;
 
             // initialize clone list
             StrokeCollection strokes = new StrokeCollection();
@@ -481,28 +480,37 @@ namespace Srl.Tools
             // iterate through each original strokes
             foreach (Stroke other in others)
             {
-                // clone the points
-                var points = new StylusPointCollection();
-                foreach (StylusPoint point in other.StylusPoints)
-                {
-                    points.Add(new StylusPoint(point.X, point.Y));
-                }
-
-                // clone the times
-                var times = new List<int>();
-                int[] otherTimes = (int[])other.GetPropertyData(timesGuid);
-                foreach (int time in otherTimes)
-                {
-                    times.Add(time);
-                }
-
-                // clone the stroke
-                Stroke stroke = new Stroke(points);
-                stroke.AddPropertyData(timesGuid, times.ToArray());
-                strokes.Add(stroke);
+                strokes.Add(Clone(other));
             }
 
             return strokes;
+        }
+
+        public static Stroke Clone(Stroke other)
+        {
+            // get GUID
+            Guid timesGuid = SketchTools.TIMES_GUID;
+
+            // clone the points
+            var points = new StylusPointCollection();
+            foreach (StylusPoint point in other.StylusPoints)
+            {
+                points.Add(new StylusPoint(point.X, point.Y));
+            }
+
+            // clone the times
+            var times = new List<int>();
+            int[] otherTimes = (int[])other.GetPropertyData(timesGuid);
+            foreach (int time in otherTimes)
+            {
+                times.Add(time);
+            }
+
+            // clone the stroke
+            Stroke stroke = new Stroke(points);
+            stroke.AddPropertyData(timesGuid, times.ToArray());
+
+            return stroke;
         }
 
         #endregion

@@ -29,10 +29,18 @@ namespace TracingDemo
         private void MyWindow_Loaded(object sender, RoutedEventArgs e)
         {
             //
+            // note: this method call must be first in this method
             ResizeControls();
 
             //
-            LoadContent(IMAGES_PATH, MODELS_PATH);
+            myResampleSize = 128;
+            myScaleBounds = MyCanvasBorder.Width * 0.6;
+            myOrigin = new StylusPoint(MyCanvasBorder.Width / 2.0, MyCanvasBorder.Height / 2.0);
+            myScaleType = SketchTools.ScaleType.Proportional;
+            myTranslateType = SketchTools.TranslateType.Median;
+
+            //
+            LoadContent(MODELS_PATH);
 
             #region Boilerplate Code
 
@@ -69,36 +77,29 @@ namespace TracingDemo
         private void MyBackButton_Click(object sender, RoutedEventArgs e)
         {
             //
-            MyCanvas.Children.Remove(myImages[myIndexer]);
-
-            //
             --myIndexer;
+            UpdateModel(myIndexer);
+            
+            //
             MyNextButton.IsEnabled = true;
             if (myIndexer == 0)
             {
                 MyBackButton.IsEnabled = false;
             }
-
-            //
-            MyCanvas.Children.Add(myImages[myIndexer]);
         }
 
         private void MyNextButton_Click(object sender, RoutedEventArgs e)
         {
             //
-            MyCanvas.Children.Remove(myImages[myIndexer]);
+            ++myIndexer;
+            UpdateModel(myIndexer);
 
             //
-            ++myIndexer;
             MyBackButton.IsEnabled = true;
             if (myIndexer == myLabels.Count - 1)
             {
                 MyNextButton.IsEnabled = false;
             }
-
-            //
-            MyCanvas.Children.Add(myImages[myIndexer]);
-
         }
 
         private void EnableButtons(bool enable)
@@ -130,9 +131,8 @@ namespace TracingDemo
             MyNextButton.Width = MyNextButton.Height = MyButtonsBorder.ActualHeight;
         }
 
-        private void LoadContent(string imagesPath, string modelsPath)
+        private void LoadContent(string modelsPath)
         {
-            LoadImages(imagesPath);
             LoadModels(modelsPath);
 
             //
@@ -142,96 +142,57 @@ namespace TracingDemo
             }
         }
 
-        private void LoadImages(string imagesPath)
-        {
-            // 
-            List<string> labels = new List<string>();
-            List<Image> images = new List<Image>();
-            string label;
-            Image image;
-            foreach (var imagePath in Directory.GetFiles(imagesPath))
-            {
-                if (imagePath.EndsWith(".png"))
-                {
-                    // get the label and image
-                    label = Path.GetFileNameWithoutExtension(imagePath);
-                    image = CreateImage(imagePath);
-
-                    labels.Add(label);
-                    images.Add(image);
-                }
-            }
-
-            //
-            myLabels = labels;
-            myImages = images;
-            myIndexer = 12;
-
-            // load the first image onto the canvas
-            //MyCanvas.Children.Add(myImages[myIndexer]);
-        }
-
         private void LoadModels(string modelsPath)
         {
+            // test
+            DrawingAttributes da = new DrawingAttributes();
+            da.Color = BRUSH_COLOR;
+            da.Width = BRUSH_SIZE;
+            da.Height = BRUSH_SIZE;
+
             List<StrokeCollection> models = new List<StrokeCollection>();
             StrokeCollection model;
             SketchXmlProcessor processor = new SketchXmlProcessor();
+            List<string> labels = new List<string>();
+            string label;
             foreach (var modelPath in Directory.GetFiles(modelsPath))
             {
                 if (modelPath.EndsWith(".xml"))
                 {
                     // get the label and model
+                    label = Path.GetFileNameWithoutExtension(modelPath);
                     model = processor.Read(modelPath);
-
+                    labels.Add(label);
                     models.Add(model);
                 }
             }
-
-            //
+            myLabels = labels;
             myModels = models;
 
             //
-            model = SketchTools.Clone(myModels[myIndexer]);
-            model = SketchTools.Resample(model, 128);
-            model = SketchTools.Scale(model, MyCanvasBorder.Width * 0.6, SketchTools.ScaleType.Proportional);
-            model = SketchTools.Translate(model, new StylusPoint(MyCanvasBorder.Width / 2.0, MyCanvasBorder.Height / 2.0), SketchTools.TranslateType.Median);
-            foreach (Stroke stroke in model)
+            myCurrentModel = SketchTools.Normalize(SketchTools.Clone(myModels[myIndexer]), myResampleSize, myScaleBounds, myOrigin, myScaleType, myTranslateType);
+            foreach (Stroke stroke in myCurrentModel)
             {
-                stroke.DrawingAttributes.Color = Colors.Black;
-                stroke.DrawingAttributes.Width = 40;
-                stroke.DrawingAttributes.Height = 40;
+                //stroke.DrawingAttributes.Color = BRUSH_COLOR;
+                //stroke.DrawingAttributes.Width = BRUSH_SIZE;
+                //stroke.DrawingAttributes.Height = BRUSH_SIZE;
+                stroke.DrawingAttributes = da;
             }
-            MyCanvas.Strokes.Add(model);
+            MyCanvas.Strokes.Add(myCurrentModel);
         }
 
-        private Image CreateImage(string filePath)
+        private void UpdateModel(int index)
         {
-            Image image = new Image();
-            image.Source = new BitmapImage(new Uri(filePath));
-            double imageWidth = image.Source.Width;
-            double imageHeight = image.Source.Height;
+            MyCanvas.Strokes.Remove(myCurrentModel);
 
-            double canvasWidth = MyCanvasBorder.Width;
-            double canvasHeight = MyCanvasBorder.Height;
-            double scaleFactor = ScaleFactor(canvasWidth, canvasHeight, imageWidth, imageHeight);
-
-            image.Width = imageWidth * scaleFactor;
-            image.Height = imageHeight * scaleFactor;
-            InkCanvas.SetLeft(image, (canvasWidth / 2.0) - (image.Width / 2.0));
-            InkCanvas.SetTop(image, (canvasHeight / 2.0) - (image.Height / 2.0));
-
-            return image;
-        }
-
-        private double ScaleFactor(double controlWidth, double controlHeight, double imageWidth, double imageHeight)
-        {
-            double canvasRatio = controlHeight / controlWidth;
-            double imageRatio = imageHeight / imageWidth;
-            double scaleFactor = canvasRatio <= imageRatio
-                ? controlHeight / imageHeight
-                : controlWidth / imageWidth;
-
-            return scaleFactor;
+            myCurrentModel = SketchTools.Normalize(SketchTools.Clone(myModels[index]), myResampleSize, myScaleBounds, myOrigin, myScaleType, myTranslateType);
+            foreach (Stroke stroke in myCurrentModel)
+            {
+                stroke.DrawingAttributes.Color = BRUSH_COLOR;
+                stroke.DrawingAttributes.Width = BRUSH_SIZE;
+                stroke.DrawingAttributes.Height = BRUSH_SIZE;
+            }
+            MyCanvas.Strokes.Add(myCurrentModel);
         }
 
         #endregion
@@ -239,13 +200,20 @@ namespace TracingDemo
         #region Fields
 
         private List<string> myLabels;
-        private List<Image> myImages;
         private List<StrokeCollection> myModels;
         private int myIndexer;
+        private StrokeCollection myCurrentModel;
 
-        public static readonly string DATA_PATH = @"C:\Users\pault\Documents\GitHub\srl-research\data\hiragana";
+        private int myResampleSize;
+        private double myScaleBounds;
+        private StylusPoint myOrigin;
+        private SketchTools.ScaleType myScaleType;
+        private SketchTools.TranslateType myTranslateType;
+
+        public static readonly string DATA_PATH = @"C:\Users\paultaele\Documents\GitHub\srl-research\data\hiragana";
         public static readonly string MODELS_PATH = DATA_PATH + Path.DirectorySeparatorChar + "models" + Path.DirectorySeparatorChar;
-        public static readonly string IMAGES_PATH = DATA_PATH + Path.DirectorySeparatorChar + "images" + Path.DirectorySeparatorChar;
+        public static readonly Color BRUSH_COLOR = Colors.Black;
+        public static readonly double BRUSH_SIZE = 20;
 
         #endregion
     }

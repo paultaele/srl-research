@@ -54,6 +54,7 @@ namespace BasicSketchInterface
         {
             // resize canvas
             MyCanvasBorder.Width = MyCanvasBorder.ActualHeight;
+            MyCanvasBorder.Height = MyCanvasBorder.ActualHeight;
 
             // resize instructions
             MyInstructionsBorder.Width = MyCanvasBorder.Width;

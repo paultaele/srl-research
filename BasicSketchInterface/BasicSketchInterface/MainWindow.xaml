@@ -47,7 +47,7 @@
                     <RowDefinition Height="8*"/>
                     <RowDefinition Height="1*"/>
                 </Grid.RowDefinitions>
-                
+
                 <!-- INSTRUCTIONS AREA -->
                 <Border Grid.Row="0" Name="MyInstructionsBorder" Margin="10" VerticalAlignment="Center">
                     <TextBlock Name="MyInstructionsBlock" Text="Hello" FontSize="30"></TextBlock>
@@ -56,13 +56,13 @@
                 <!-- CANVAS AREA -->
                 <Border Grid.Row="1" Name="MyCanvasBorder" BorderThickness="5" BorderBrush="Black" Margin="10">
                     <InkCanvas Name="MyCanvas" IsEnabled="True" StylusMove="MyCanvas_StylusMove" StylusButtonDown="MyCanvas_StylusButtonDown" StylusButtonUp="MyCanvas_StylusButtonUp"
-                           PreviewMouseMove="MyCanvas_PreviewMouseMove" PreviewMouseDown="MyCanvas_PreviewMouseDown" PreviewMouseUp="MyCanvas_PreviewMouseUp">
+                           PreviewMouseMove="MyCanvas_PreviewMouseMove" PreviewMouseDown="MyCanvas_PreviewMouseDown" PreviewMouseUp="MyCanvas_PreviewMouseUp" MouseUp="MyCanvas_MouseUp">
                         <InkCanvas.DefaultDrawingAttributes>
                             <DrawingAttributes Width="10" Height="10" Color="Black"/>
                         </InkCanvas.DefaultDrawingAttributes>
                     </InkCanvas>
                 </Border>
-                
+
                 <!-- BUTTONS AREA -->
                 <Border Grid.Row="2" Name="MyButtonsBorder" Margin="10">
                     <Grid >
