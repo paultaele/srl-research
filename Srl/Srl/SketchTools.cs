@@ -412,6 +412,25 @@ namespace Srl.Tools
             return distance;
         }
 
+        public static double Distance(Stroke a, Stroke b)
+        {
+            StylusPointCollection apoints = a.StylusPoints;
+            StylusPointCollection bpoints = b.StylusPoints;
+
+            if (apoints.Count != bpoints.Count)
+            {
+                return 0.0;
+            }
+
+            double distance = 0.0;
+            for (int i = 0; i < apoints.Count; ++i)
+            {
+                distance += Distance(apoints[i], bpoints[i]);
+            }
+
+            return distance;
+        }
+
         public static double Angle(Stroke stroke)
         {
             StylusPointCollection points = stroke.StylusPoints;
@@ -509,6 +528,28 @@ namespace Srl.Tools
             // clone the stroke
             Stroke stroke = new Stroke(points);
             stroke.AddPropertyData(timesGuid, times.ToArray());
+
+            return stroke;
+        }
+
+        public static Stroke Reverse(Stroke other)
+        {
+            //
+            int count = other.StylusPoints.Count;
+            StylusPointCollection points = new StylusPointCollection();
+            List<int> times = new List<int>();
+
+            //
+            int[] otherTimes = (int[])other.GetPropertyData(SketchTools.TIMES_GUID);
+            for (int i = 0; i < count; ++i)
+            {
+                points.Add(other.StylusPoints[(count - 1) - i]);
+                times.Add(otherTimes[(count - 1) - i]);
+            }
+
+            //
+            Stroke stroke = new Stroke(points);
+            stroke.AddPropertyData(SketchTools.TIMES_GUID, times.ToArray());
 
             return stroke;
         }

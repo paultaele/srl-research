@@ -1,0 +1,102 @@
+﻿<Window x:Class="FollowDemo.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:FollowDemo"
+        mc:Ignorable="d"
+        Title="Follow Demo" Name="MyWindow" Loaded="MyWindow_Loaded" SizeChanged="MyWindow_SizeChanged" ContentRendered="MyWindow_ContentRendered">
+
+    <!-- ENTIRE INTERFACE -->
+    <Grid Background="Gray">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- MENU BAR -->
+        <Menu Grid.Row="0">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Load">
+                    <MenuItem Header="_Data" Name="MyLoadDataItem"/>
+                    <MenuItem Header="_Images" Name="MyLoadImagesItem"/>
+                </MenuItem>
+                <Separator/>
+                <MenuItem Header="_Exit" Name="MyExitItem" Click="MyExitItem_Click"/>
+            </MenuItem>
+        </Menu>
+
+        <!-- CORE AREA -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="7*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- OUTPUT AREA -->
+            <Grid Grid.Column="0">
+                <Border Margin="10" BorderBrush="Black" Background="LightGray" BorderThickness="5">
+                    <TextBlock Name="MyOutputBlock" Background="LightGray" FontFamily="Consolas" FontSize="30" Margin="10"/>
+                </Border>
+            </Grid>
+
+            <!-- INPUT AREA -->
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="8*"/>
+                    <RowDefinition Height="1*"/>
+                </Grid.RowDefinitions>
+
+                <!-- INSTRUCTIONS AREA -->
+                <Border Grid.Row="0" Name="MyInstructionsBorder" Margin="10" VerticalAlignment="Center">
+                    <TextBlock Name="MyInstructionsBlock" Text="Hello" FontSize="30"></TextBlock>
+                </Border>
+
+                <!-- CANVAS AREA -->
+                <Border Grid.Row="1" Name="MyCanvasBorder" BorderThickness="5" BorderBrush="Black" Margin="10">
+                    <InkCanvas Name="MyCanvas" IsEnabled="False" StylusMove="MyCanvas_StylusMove" StylusButtonDown="MyCanvas_StylusButtonDown" StylusButtonUp="MyCanvas_StylusButtonUp"
+                           PreviewMouseMove="MyCanvas_PreviewMouseMove" PreviewMouseDown="MyCanvas_PreviewMouseDown" PreviewMouseUp="MyCanvas_PreviewMouseUp" MouseUp="MyCanvas_MouseUp">
+                        <InkCanvas.DefaultDrawingAttributes>
+                            <DrawingAttributes Width="5" Height="5" Color="Red"/>
+                        </InkCanvas.DefaultDrawingAttributes>
+                    </InkCanvas>
+                </Border>
+
+                <!-- BUTTONS AREA -->
+                <Border Grid.Row="2" Name="MyButtonsBorder" Margin="10">
+                    <Grid >
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="8*"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- NAVIGATION BUTTONS -->
+                        <Button Grid.Column="0" Name="MyBackButton" Click="MyBackButton_Click" Content="◀" Background="Transparent" BorderBrush="Transparent" FontSize="30" IsEnabled="False"/>
+                        <Button Grid.Column="2" Name="MyNextButton" Click="MyNextButton_Click" Content="▶" Background="Transparent" BorderBrush="Transparent" FontSize="30" IsEnabled="False"/>
+
+                        <!-- EDITING BUTTONS -->
+                        <Grid Grid.Column="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2.5*"/>
+                                <ColumnDefinition Width="2.5*"/>
+                                <ColumnDefinition Width="2.5*"/>
+                                <ColumnDefinition Width="2.5*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Button Grid.Column="0" Name="MyClearButton" Click="MyClearButton_Click" Content="✖" Background="Transparent" BorderBrush="Transparent" FontSize="30" IsEnabled="False"/>
+                            <Button Grid.Column="1" Name="MyUndoButton" Click="MyUndoButton_Click" Content="⟲" Background="Transparent" BorderBrush="Transparent" FontSize="30" IsEnabled="False"/>
+                            <Button Grid.Column="2" Name="MySaveButton" Click="MySaveButton_Click" Content="★" Background="Transparent" BorderBrush="Transparent" FontSize="30" IsEnabled="False"/>
+                            <Button Grid.Column="3" Name="MyCheckButton" Click="MyCheckButton_Click" Content="✓" Background="Transparent" BorderBrush="Transparent" FontSize="30" IsEnabled="False"/>
+                        </Grid>
+
+                    </Grid>
+
+                </Border>
+
+            </Grid>
+        </Grid>
+    </Grid>
+
+</Window>

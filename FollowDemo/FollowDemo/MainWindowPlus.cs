@@ -4,8 +4,9 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Ink;
 using System.Windows.Input;
+using System.Windows.Shapes;
 
-namespace BasicSketchInterface
+namespace FollowDemo
 {
     public partial class MainWindow : Window
     {
@@ -29,6 +30,25 @@ namespace BasicSketchInterface
             myTimeOffset = 0;
 
             #endregion
+
+            // remove the animated stroke from the canvas if the last stroke was not a garbage stroke (e.g., accidental mini-stroke)
+            if (!IgnoreRecentStroke)
+            {
+                foreach (Line animatedPoint in myAnimatedStroke)
+                {
+                    MyCanvas.Children.Remove(animatedPoint);
+                }
+            }
+            else
+            {
+                IgnoreRecentStroke = false;
+            }
+
+            // remove the animated stroke from the canvas
+            foreach (Line animatedPoint in myAnimatedStroke)
+            {
+                MyCanvas.Children.Remove(animatedPoint);
+            }
 
             // update the stroke with the initial x, y, and time
             UpdateStroke(
@@ -79,6 +99,9 @@ namespace BasicSketchInterface
 
             #endregion
 
+            //
+            MyCanvas.IsEnabled = false;
+
             // update the stroke with the final x, y, and time
             UpdateStroke(
                 e.GetPosition(MyCanvas).X,
@@ -94,6 +117,27 @@ namespace BasicSketchInterface
             // add the times and stroke
             stroke.AddPropertyData(SketchTools.TIMES_GUID, times);
             myStrokes.Add(stroke);
+
+            // throw away garbage strokes (i.e., any unintentional mini-stroke with few points)
+            if (stroke.StylusPoints.Count < MIN_STROKE_POINTS)
+            {
+                IgnoreRecentStroke = true;
+                return;
+            }
+
+            // case #1: there are still strokes left to animate
+            // update to the next animated stroke
+            // case #2: there are no more strokes to animate
+            // enable the animation complete flag
+            ++myAnimationIndexer;
+            if (myAnimationIndexer < myModelsDictionary[myLabels[myIndexer]].Count)
+            {
+                myAnimatedStroke = AnimateStroke(myModelsDictionary[myLabels[myIndexer]][myAnimationIndexer]);
+            }
+            else
+            {
+                IsAnimationDone = true;
+            }
         }
 
         private void MyCanvas_PreviewMouseDown(object sender, MouseButtonEventArgs e)
@@ -112,6 +156,19 @@ namespace BasicSketchInterface
             PreviousMouseState = MouseState.MouseDown;
 
             #endregion
+
+            // remove the animated stroke from the canvas if the last stroke was not a garbage stroke (e.g., accidental mini-stroke)
+            if (!IgnoreRecentStroke)
+            {
+                foreach (Line animatedPoint in myAnimatedStroke)
+                {
+                    MyCanvas.Children.Remove(animatedPoint);
+                }
+            }
+            else
+            {
+                IgnoreRecentStroke = false;
+            }
 
             // initialize the points and times
             myPoints = new StylusPointCollection();
@@ -176,6 +233,9 @@ namespace BasicSketchInterface
 
             #endregion
 
+            //
+            MyCanvas.IsEnabled = false;
+
             // update the stroke with the final x, y, and time
             UpdateStroke(
                 e.GetPosition(MyCanvas).X,
@@ -191,10 +251,49 @@ namespace BasicSketchInterface
             // add the times and stroke
             stroke.AddPropertyData(SketchTools.TIMES_GUID, times);
             myStrokes.Add(stroke);
+
+            // throw away garbage strokes (i.e., any unintentional mini-stroke with few points)
+            if (stroke.StylusPoints.Count < MIN_STROKE_POINTS)
+            {
+                IgnoreRecentStroke = true;
+                return;
+            }
+
+            // case #1: there are still strokes left to animate
+            // update to the next animated stroke
+            // case #2: there are no more strokes to animate
+            // enable the animation complete flag
+            ++myAnimationIndexer;
+            if (myAnimationIndexer < myModelsDictionary[myLabels[myIndexer]].Count)
+            {
+                myAnimatedStroke = AnimateStroke(myModelsDictionary[myLabels[myIndexer]][myAnimationIndexer]);
+            }
+            else
+            {
+                IsAnimationDone = true;
+            }
         }
 
         private void MyCanvas_MouseUp(object sender, MouseButtonEventArgs e)
         {
+            // case: the user drew an unintentional garbage stroke (e.g., mini-stroke with few points)
+            // ignore the last drawn stroke by removing it from the canvas and stroke list
+            // and re-enabling the canvas for the user to try again
+            if (IgnoreRecentStroke)
+            {
+                // re-enable the canvas
+                MyCanvas.IsEnabled = true;
+
+                // manually remove the very last stroke added as soon as the mouse is up
+                // note: UndoStrokes() not used here since MyCanvas does not detect most recent stroke added to myStrokes
+                // therefore, the very last stroke in MyCanvas.Strokes instead of myStrokes is removed instead
+                // for this scenario where mouse is up, this should be fine in theory
+                MyCanvas.Strokes.RemoveAt(MyCanvas.Strokes.Count - 1);
+                myStrokes.RemoveAt(myStrokes.Count - 1);
+
+                return;
+            }
+
             #region Boilerplate Code
 
             // remove the latest automatic stroke added to the canvas
@@ -210,6 +309,68 @@ namespace BasicSketchInterface
             MyCanvas.Strokes.Add(stroke);
 
             #endregion
+
+            // case: there are no more animated stroke to draw
+            // once animations are done, then it is time for assessment
+            if (IsAnimationDone)
+            {
+                // IMPORTANT! first assign a dummy label to mystrokes before proceeding
+                // needed to do later processing
+                myStrokes.AddPropertyData(SketchTools.LABEL_GUID, "");
+
+                // reset the animation state flag
+                IsAnimationDone = false;
+                IsModelDisplayed = true;
+                IsMappingDisplayed = true;
+
+                // display the mapping strokes between the user and model strokes
+                // also move the user strokes to the foreground by removing then re-adding them
+                StrokeCollection userStrokes = myStrokes;
+                StrokeCollection modelStrokes = myModelsDictionary[myLabels[myIndexer]];
+                myMappingStrokes = CreateMapping(userStrokes, modelStrokes);
+                MyCanvas.Strokes.Add(myMappingStrokes);
+                MyCanvas.Strokes.Add(myModelsDictionary[myLabels[myIndexer]]);
+                MyCanvas.Strokes.Remove(myStrokes);
+                MyCanvas.Strokes.Add(myStrokes);
+
+                // TODO: assess the user's strokes
+                //Assessor assessor = new Assessor(this); // debug version
+                Assessor assessor = new Assessor(MyCanvas.ActualWidth);
+                assessor.Run(userStrokes, modelStrokes);
+
+                Assessor.ResultType lengthResult = assessor.LengthResult;
+                string lengthResultOutput = "";
+                switch (lengthResult)
+                {
+                    case Assessor.ResultType.Low:
+                        lengthResultOutput = "★☆☆";
+                        break;
+                    case Assessor.ResultType.Med:
+                        lengthResultOutput = "★★☆";
+                        break;
+                    default:
+                        lengthResultOutput = "★★★";
+                        break;
+                }
+
+                // debug
+                double max = 0.0;
+                int maxIndex = -1;
+                for (int i = 0; i < assessor.LengthDebug.Length; ++i)
+                {
+                    if (assessor.LengthDebug[i] > max)
+                    {
+                        max = assessor.LengthDebug[i];
+                        maxIndex = i;
+                    }
+                }
+                // end debug
+
+                MyOutputBlock.Text
+                    = "Length Result:\n"
+                    + lengthResultOutput + "\n"
+                    + "[" + maxIndex + "] " + Math.Round(max, 2) + "\n";
+            }
         }
 
         #endregion
@@ -227,25 +388,9 @@ namespace BasicSketchInterface
 
         private void MyUndoButton_Click(object sender, RoutedEventArgs e)
         {
-            // case: there are strokes on the canvas
-            //if (MyCanvas.Strokes.Count > 0)
-            //{
-            //    // remove the most recent stroke added from the canvas
-            //    MyCanvas.Strokes.RemoveAt(MyCanvas.Strokes.Count - 1);
-
-            //    // remove the most recent stroke added from the list of strokes
-            //    myStrokes.RemoveAt(myStrokes.Count - 1);
-            //}
             if (MyCanvas.Strokes.Count > 0)
             {
-                // retrieve the last stroke added
-                Stroke undoStroke = myStrokes[myStrokes.Count - 1];
-
-                // remove the last stroke added to the canvas
-                MyCanvas.Strokes.Remove(undoStroke);
-
-                // remove the last stroke added from the list of strokes
-                myStrokes.RemoveAt(myStrokes.Count - 1);
+                UndoStroke();
             }
 
             // case: there are now no strokes on the canvas
@@ -292,6 +437,18 @@ namespace BasicSketchInterface
             myStrokes = new StrokeCollection();
         }
 
+        private void UndoStroke()
+        {
+            // retrieve the last stroke added
+            Stroke undoStroke = myStrokes[myStrokes.Count - 1];
+
+            // remove the last stroke added to the canvas
+            MyCanvas.Strokes.Remove(undoStroke);
+
+            // remove the last stroke added from the list of strokes
+            myStrokes.RemoveAt(myStrokes.Count - 1);
+        }
+
         #endregion
 
         #region Stylus and Mouse Flags and Enums
@@ -307,6 +464,11 @@ namespace BasicSketchInterface
         private enum StylusState { StylusDown, StylusMove, StylusUp }
         private enum MouseState { MouseDown, MouseMove, MouseUp }
 
+        private bool IsAnimationDone { get; set; }
+        private bool IsModelDisplayed { get; set; }
+        private bool IsMappingDisplayed { get; set; }
+        private bool IgnoreRecentStroke { get; set; }
+
         #endregion
 
         #region Fields
@@ -315,6 +477,8 @@ namespace BasicSketchInterface
         private List<int> myTimes;
         private StrokeCollection myStrokes;
         private long myTimeOffset;
+
+        public static readonly int MIN_STROKE_POINTS = 10;
 
         #endregion
     }
