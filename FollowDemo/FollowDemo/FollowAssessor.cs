@@ -4,18 +4,19 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows.Ink;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace FollowDemo
 {
-    public class Assessor
+    public class FollowAssessor
     {
-        public Assessor(double size)
+        public FollowAssessor(double size)
         {
             CanvasSize = size;
         }
 
         // debug
-        public Assessor(MainWindow window)
+        public FollowAssessor(MainWindow window)
         {
             CanvasSize = window.MyCanvas.ActualWidth;
             myWindow = window;
@@ -30,13 +31,48 @@ namespace FollowDemo
             // sync the model storkes
             // means resampling the model strokes to the user strokes
             // AND matching the best pairwise direction between the user and model strokes
-            SyncStroke(userStrokes, modelStrokes);
+            modelStrokes = SyncStrokes(userStrokes, modelStrokes);
 
-            // length test?
+            // length test
             LengthTest(userStrokes, modelStrokes);
+
+            // closeness test
+            ClosenessTest(userStrokes, modelStrokes);
         }
 
+       
         #region Tests
+
+        private void ClosenessTest(StrokeCollection userStrokes, StrokeCollection modelStrokes)
+        {
+            //
+            Stroke userStroke, modelStroke;
+            StylusPoint userPoint, modelPoint;
+            List<double> distances = new List<double>();
+            double distance;
+            for (int i = 0; i < userStrokes.Count; ++i)
+            {
+                //
+                userStroke = userStrokes[i];
+                modelStroke = modelStrokes[i];
+
+                for (int j = 0; j < userStroke.StylusPoints.Count; ++j)
+                {
+                    //
+                    userPoint = userStroke.StylusPoints[j];
+                    modelPoint = modelStroke.StylusPoints[j];
+
+                    //
+                    distance = SketchTools.Distance(userPoint, modelPoint);
+                    distances.Add(distance);
+
+                    //// debug
+                    //double temp = 20.0 - distance;
+                    //if (temp < 0) temp = 0.0;
+                    //// end debug
+                }
+            }
+        }
 
         private void LengthTest(StrokeCollection userStrokes, StrokeCollection modelStrokes)
         {
@@ -51,8 +87,6 @@ namespace FollowDemo
             List<double> debug = new List<double>();
 
             // iterate through each user and modelstroke
-            //double high = 0.0; // debug
-            //int highIndex = -1; // debug
             for (int i = 0; i < userStrokes.Count; ++i)
             {
                 // compute the metrics
@@ -83,16 +117,6 @@ namespace FollowDemo
                     ++numHigh;
                 }
                 results.Add(result);
-
-                //// debug
-                //Console.WriteLine(score);
-
-                //// debugging
-                //if (score > high)
-                //{
-                //    high = score;
-                //    highIndex = i;
-                //}
             }
 
             // get the list of results from all the symbol's strokes
@@ -110,31 +134,15 @@ namespace FollowDemo
                 LengthResult = ResultType.High;
             }
             LengthDebug = debug.ToArray();
-
-            //// debug
-            //Console.WriteLine();
-
-            // NOTES:
-            // 3 STARS = 5% or below?
-            // 2 STARS = 10% or below?
-            // 1 STAR  = above 10%?
-
-            // debugging
-            //string result = "";
-            //if (numLow > 0) { result = "LOW"; }
-            //else if (numMed > 0) { result = "MED"; }
-            //else { result = "HIGH"; }
-            //result += "\n [" + highIndex + "] " + Math.Round(high, 2);
-            //myWindow.MyOutputBlock.Text = result;
         }
 
         #endregion
 
         #region Helper Methods
 
-        private StrokeCollection SyncStroke(StrokeCollection userStrokes, StrokeCollection modelStrokes)
+        private StrokeCollection SyncStrokes(StrokeCollection userStrokes, StrokeCollection modelStrokes)
         {
-            // initialize the list of synched strokes
+            // initialize the list of map strokes
             StrokeCollection syncedStrokes = new StrokeCollection();
 
             // iterate through each user and model strokes
@@ -143,7 +151,6 @@ namespace FollowDemo
             StylusPoint lastPoint;
             int lastTime;
             double directDistance, reverseDistance;
-            Stroke synchedStroke;
             for (int i = 0; i < userStrokes.Count; ++i)
             {
                 // retrieve the current user and model strokes
@@ -174,14 +181,17 @@ namespace FollowDemo
                 reverseDistance = SketchTools.Distance(userStroke, reverseStroke);
 
                 // reserve the stroke if the reverse pairwise distance is shorter
-                synchedStroke = reverseDistance < directDistance ? reverseStroke : modelStroke;
-
-                // add the synced stroke
-                syncedStrokes.Add(synchedStroke);
+                if (reverseDistance < directDistance)
+                {
+                    modelStroke = reverseStroke;
+                }
+                syncedStrokes.Add(modelStroke);
             }
 
+            //
             return syncedStrokes;
         }
+
 
         #endregion
 
@@ -191,6 +201,7 @@ namespace FollowDemo
 
         public ResultType LengthResult { get; private set; }
         public ResultType ClosenessResult { get; private set; }
+        //public ResultType PrecisionResult { get; private set; }
         public ResultType DirectionResult { get; private set; }
 
         public ResultType[] LengthResults { get; private set; }
@@ -208,7 +219,7 @@ namespace FollowDemo
 
         public static readonly double THRESHOLD_LOW = 0.10;
         public static readonly double THRESHOLD_MED = 0.05;
-        public static readonly string DEBUG_FILE = @"C:\Users\paultaele\Desktop\debug.txt";
+        //public static readonly string DEBUG_FILE = @"C:\Users\paultaele\Desktop\debug.txt";
 
         #endregion
     }

@@ -29,6 +29,9 @@ namespace FollowDemo
 
         private void MyWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            //
+            if (CAN_INTERRUPT) { MyCanvas.IsEnabled = true; }
+
             // 0. initialize the control size
             ResizeControls();
 
@@ -230,7 +233,7 @@ namespace FollowDemo
 
         private void Storyboard_Completed(object sender, EventArgs e)
         {
-            MyCanvas.IsEnabled = true;
+            if (!CAN_INTERRUPT) { MyCanvas.IsEnabled = true; }
         }
 
         private void MyWindow_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -347,7 +350,7 @@ namespace FollowDemo
         private void MyBackButton_Click(object sender, RoutedEventArgs e)
         {
             // disable the canvas initially (to allow for animation to finish drawing)
-            MyCanvas.IsEnabled = false;
+            if (!CAN_INTERRUPT) { MyCanvas.IsEnabled = false; }
 
             // clear output panel
             MyOutputBlock.Text = "";
@@ -391,7 +394,7 @@ namespace FollowDemo
         private void MyNextButton_Click(object sender, RoutedEventArgs e)
         {
             // disable the canvas initially (to allow for animation to finish drawing)
-            MyCanvas.IsEnabled = false;
+            if (!CAN_INTERRUPT) { MyCanvas.IsEnabled = false; }
 
             // clear output panel
             MyOutputBlock.Text = "";

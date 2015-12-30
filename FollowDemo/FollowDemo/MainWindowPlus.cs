@@ -100,7 +100,7 @@ namespace FollowDemo
             #endregion
 
             //
-            MyCanvas.IsEnabled = false;
+            if (!CAN_INTERRUPT) { MyCanvas.IsEnabled = false; }
 
             // update the stroke with the final x, y, and time
             UpdateStroke(
@@ -234,7 +234,7 @@ namespace FollowDemo
             #endregion
 
             //
-            MyCanvas.IsEnabled = false;
+            if (!CAN_INTERRUPT) { MyCanvas.IsEnabled = false; }
 
             // update the stroke with the final x, y, and time
             UpdateStroke(
@@ -282,7 +282,7 @@ namespace FollowDemo
             if (IgnoreRecentStroke)
             {
                 // re-enable the canvas
-                MyCanvas.IsEnabled = true;
+                if (!CAN_INTERRUPT) { MyCanvas.IsEnabled = true; }
 
                 // manually remove the very last stroke added as soon as the mouse is up
                 // note: UndoStrokes() not used here since MyCanvas does not detect most recent stroke added to myStrokes
@@ -334,18 +334,18 @@ namespace FollowDemo
                 MyCanvas.Strokes.Add(myStrokes);
 
                 // TODO: assess the user's strokes
-                //Assessor assessor = new Assessor(this); // debug version
-                Assessor assessor = new Assessor(MyCanvas.ActualWidth);
+                FollowAssessor assessor = new FollowAssessor(this); // debug version
+                //FollowAssessor assessor = new FollowAssessor(MyCanvas.ActualWidth);
                 assessor.Run(userStrokes, modelStrokes);
 
-                Assessor.ResultType lengthResult = assessor.LengthResult;
+                FollowAssessor.ResultType lengthResult = assessor.LengthResult;
                 string lengthResultOutput = "";
                 switch (lengthResult)
                 {
-                    case Assessor.ResultType.Low:
+                    case FollowAssessor.ResultType.Low:
                         lengthResultOutput = "★☆☆";
                         break;
-                    case Assessor.ResultType.Med:
+                    case FollowAssessor.ResultType.Med:
                         lengthResultOutput = "★★☆";
                         break;
                     default:
@@ -479,6 +479,7 @@ namespace FollowDemo
         private long myTimeOffset;
 
         public static readonly int MIN_STROKE_POINTS = 10;
+        public static readonly bool CAN_INTERRUPT = false;
 
         #endregion
     }
