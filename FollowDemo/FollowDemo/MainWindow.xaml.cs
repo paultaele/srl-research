@@ -727,8 +727,8 @@ namespace FollowDemo
         private List<Line> myAnimatedStroke;
         private StrokeCollection myMappingStrokes;
 
-        public static readonly string MODELS_DIR = @"C:\Users\paultaele\Documents\GitHub\srl-research\data\hiragana\models";
-        public static readonly string IMAGES_DIR = @"C:\Users\paultaele\Documents\GitHub\srl-research\data\hiragana\images";
+        public static readonly string MODELS_DIR = @"C:\Users\paultaele\Documents\GitHub\srl-research\data\katakana\models";
+        public static readonly string IMAGES_DIR = @"C:\Users\paultaele\Documents\GitHub\srl-research\data\katakana\images";
 
         public static readonly Brush ANIMATION_LINE_COLOR = Brushes.DarkBlue;
         public static readonly Color USER_STROKE_COLOR = Colors.Black;
@@ -738,11 +738,10 @@ namespace FollowDemo
 
         public static readonly double ANIMATION_TIME_SPAN = 5.0;
         public static readonly double ANIMATION_LINE_WIDTH = 10.0;
-        //public static readonly double USER_STROKE_SIZE = 5.0;
-        public static readonly double USER_STROKE_SIZE = 0.5;
+        public static readonly double USER_STROKE_SIZE = 5.0;
         public static readonly double MASK_OPACITY = 0.8;
 
-        public static readonly int RESAMPLE_POINTS = 128;
+        public static readonly int RESAMPLE_POINTS = 256;
 
         #endregion
     }

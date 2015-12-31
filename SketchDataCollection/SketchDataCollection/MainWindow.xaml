@@ -55,7 +55,7 @@
                     <InkCanvas Name="MyCanvas" StylusMove="MyCanvas_StylusMove" StylusButtonDown="MyCanvas_StylusButtonDown" StylusButtonUp="MyCanvas_StylusButtonUp"
                            PreviewMouseMove="MyCanvas_PreviewMouseMove" PreviewMouseDown="MyCanvas_PreviewMouseDown" PreviewMouseUp="MyCanvas_PreviewMouseUp">
                         <InkCanvas.DefaultDrawingAttributes>
-                            <DrawingAttributes Width="5" Height="5" Color="Black"/>
+                            <DrawingAttributes Width="1" Height="1" Color="Black" FitToCurve="True"/>
                         </InkCanvas.DefaultDrawingAttributes>
                     </InkCanvas>
                 </Border>
