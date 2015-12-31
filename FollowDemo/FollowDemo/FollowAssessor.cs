@@ -36,7 +36,6 @@ namespace FollowDemo
             // closeness test
             ClosenessTest(userStrokes, modelStrokes);
         }
-
        
         #region Tests
 
@@ -49,8 +48,9 @@ namespace FollowDemo
             double distance;
 
             // iterate through each user and model stroke
-            ///* debug */ double max = 0.0;
             int count = 0;
+            int numLow = 0;
+            int numMed = 0;
             int numHigh = 0;
             for (int i = 0; i < userStrokes.Count; ++i)
             {
@@ -71,27 +71,48 @@ namespace FollowDemo
 
                     // case: current distance exceeds closeness threshold
                     // record the current distance as a closeness error
-                    //Console.WriteLine(distance); // debug
-                    if (distance > CLOSENESS_THRESHOLD_HIGH)
+                    if (distance > CLOSENESS_THRESHOLD_LOW)
+                    {
+                        ++numLow;
+                    }
+                    else if (CLOSENESS_THRESHOLD_LOW >= distance && distance > CLOSENESS_THRESHOLD_MED)
+                    {
+                        ++numMed;
+                    }
+                    else
                     {
                         ++numHigh;
                     }
                     ++count;
                 }
             }
-            // 
-            double errorRatio = (double)numHigh / (double)count;
-            Console.WriteLine((string)modelStrokes.GetPropertyData(SketchTools.LABEL_GUID) + ": " + Math.Round(errorRatio*100.0, 2) + "%");
 
             //
-            if (numHigh == 0)
+            if (numLow > 0)
             {
-                ClosenessResult = ResultType.High;
+                ClosenessResult = ResultType.Low;
+            }
+            else if (numMed > 0)
+            {
+                ClosenessResult = ResultType.Med;
             }
             else
             {
-                Debug(userStrokes, modelStrokes);
-                ClosenessResult = ResultType.Low;
+                ClosenessResult = ResultType.High;
+            }
+        }
+
+        private void Debug(List<double> distances)
+        {
+            string dirPath = @"C:\Users\paultaele\Desktop\debug\";
+            int count = Directory.GetFiles(dirPath).Length;
+            string filePath = dirPath + "debug_" + count + ".txt";
+            using (StreamWriter file = new StreamWriter(filePath))
+            {
+                for (int i = 0; i < distances.Count; ++i)
+                {
+                    file.WriteLine(distances[i]);
+                }
             }
         }
 
@@ -125,7 +146,6 @@ namespace FollowDemo
                         file.Write(Math.Round(modelPoint.X, 2) + "\t" + Math.Round(modelPoint.Y, 2) + "\t");
                         file.WriteLine(distance);
                     }
-
                 }
             }
         }
@@ -297,7 +317,8 @@ namespace FollowDemo
         public static readonly double LENGTH_THRESHOLD_LOW = 0.10;
         public static readonly double LENGTH_THRESHOLD_MED = 0.05;
 
-        public static readonly double CLOSENESS_THRESHOLD_HIGH = 30.0;
+        public static readonly double CLOSENESS_THRESHOLD_LOW = 40.0; // 12.5% of canvas width
+        public static readonly double CLOSENESS_THRESHOLD_MED = 25.0; //  5.0% of canvas width
 
         #endregion
     }
