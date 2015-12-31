@@ -353,23 +353,10 @@ namespace FollowDemo
                         break;
                 }
 
-                // debug
-                double max = 0.0;
-                int maxIndex = -1;
-                for (int i = 0; i < assessor.LengthDebug.Length; ++i)
-                {
-                    if (assessor.LengthDebug[i] > max)
-                    {
-                        max = assessor.LengthDebug[i];
-                        maxIndex = i;
-                    }
-                }
-                // end debug
-
-                MyOutputBlock.Text
-                    = "Length Result:\n"
-                    + lengthResultOutput + "\n"
-                    + "[" + maxIndex + "] " + Math.Round(max, 2) + "\n";
+                // TODO: RESTORE LATER
+                lengthResultOutput = "Length Result:\n" + lengthResultOutput;
+                //???
+                MyOutputBlock.Text = lengthResultOutput;
             }
         }
 

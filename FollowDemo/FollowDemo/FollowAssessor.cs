@@ -45,11 +45,14 @@ namespace FollowDemo
 
         private void ClosenessTest(StrokeCollection userStrokes, StrokeCollection modelStrokes)
         {
-            //
+            // initialize the variables
             Stroke userStroke, modelStroke;
             StylusPoint userPoint, modelPoint;
             List<double> distances = new List<double>();
             double distance;
+
+            // iterate through each user and model stroke
+            /* debug */ double max = 0.0;
             for (int i = 0; i < userStrokes.Count; ++i)
             {
                 //
@@ -66,12 +69,16 @@ namespace FollowDemo
                     distance = SketchTools.Distance(userPoint, modelPoint);
                     distances.Add(distance);
 
+                    // debug
+                    if (max < distance) { max = distance; }
+                    //Console.Write(Math.Round(distance) + ", "); // debug
                     //// debug
                     //double temp = 20.0 - distance;
                     //if (temp < 0) temp = 0.0;
                     //// end debug
                 }
             }
+            //Console.WriteLine("MAX: " + max); // debug
         }
 
         private void LengthTest(StrokeCollection userStrokes, StrokeCollection modelStrokes)
@@ -84,9 +91,8 @@ namespace FollowDemo
             int numHigh = 0;
             ResultType result;
             List<ResultType> results = new List<ResultType>();
-            List<double> debug = new List<double>();
 
-            // iterate through each user and modelstroke
+            // iterate through each user and model stroke
             for (int i = 0; i < userStrokes.Count; ++i)
             {
                 // compute the metrics
@@ -95,21 +101,23 @@ namespace FollowDemo
                 userStrokeLength = SketchTools.PathLength(userStroke);
                 modelStrokeLength = SketchTools.PathLength(modelStroke);
                 userModelRatio = Math.Abs(1.0 - userStrokeLength / modelStrokeLength);
-                if (userModelRatio > 1.0) { userModelRatio = 1.0; }
+                //if (userModelRatio > 1.0) { userModelRatio = 1.0; }
                 userCanvasRatio = userStrokeLength / CanvasSize;
+                if (userCanvasRatio > 1.0) { userCanvasRatio = 1.0; }
 
                 // calculate the score
                 score = userModelRatio * userCanvasRatio;
-                debug.Add(score);
                 if (score > THRESHOLD_LOW)
                 {
                     result = ResultType.Low;
                     ++numLow;
+                    Console.WriteLine("[" + i + "] " + Math.Round(score, 4) + " | " + Math.Round(userModelRatio, 2) + " | " + Math.Round(userCanvasRatio, 2)); // debug
                 }
                 else if (THRESHOLD_LOW >= score && score > THRESHOLD_MED)
                 {
                     result = ResultType.Med;
                     ++numMed;
+                    Console.WriteLine("[" + i + "] " + Math.Round(score, 4) + " | " + Math.Round(userModelRatio, 2) + " | " + Math.Round(userCanvasRatio, 2)); // debug
                 }
                 else
                 {
@@ -118,6 +126,7 @@ namespace FollowDemo
                 }
                 results.Add(result);
             }
+            Console.WriteLine("-----"); // debug
 
             // get the list of results from all the symbol's strokes
             LengthResults = results.ToArray();
@@ -133,7 +142,6 @@ namespace FollowDemo
             {
                 LengthResult = ResultType.High;
             }
-            LengthDebug = debug.ToArray();
         }
 
         #endregion
@@ -219,7 +227,6 @@ namespace FollowDemo
 
         public static readonly double THRESHOLD_LOW = 0.10;
         public static readonly double THRESHOLD_MED = 0.05;
-        //public static readonly string DEBUG_FILE = @"C:\Users\paultaele\Desktop\debug.txt";
 
         #endregion
     }

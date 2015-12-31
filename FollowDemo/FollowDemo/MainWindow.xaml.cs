@@ -277,28 +277,28 @@ namespace FollowDemo
 
             // create labels list and models and images dictionaries
             SketchXmlProcessor processor = new SketchXmlProcessor();
-            StrokeCollection sketch;
+            StrokeCollection modelStrokes;
             string sketchName;
-            foreach (string modelPath in Directory.GetFiles(modelsDir))
+            foreach (string modelFilePath in Directory.GetFiles(modelsDir))
             {
-                if (modelPath.EndsWith(".xml"))
+                if (modelFilePath.EndsWith(".xml"))
                 {
-                    sketch = CreateSketch(modelPath);
-                    sketchName = (string)sketch.GetPropertyData(SketchTools.LABEL_GUID);
+                    modelStrokes = CreateSketch(modelFilePath);
+                    sketchName = (string)modelStrokes.GetPropertyData(SketchTools.LABEL_GUID);
                     labels.Add(sketchName);
 
-                    modelsDictionary.Add(sketchName, sketch);
+                    modelsDictionary.Add(sketchName, modelStrokes);
                 }
             }
 
             Image image;
             string imageName;
-            foreach (string imagePath in Directory.GetFiles(imagesDir))
+            foreach (string imageFilePath in Directory.GetFiles(imagesDir))
             {
-                if (imagePath.EndsWith(".png"))
+                if (imageFilePath.EndsWith(".png"))
                 {
-                    image = CreateImage(imagePath);
-                    imageName = System.IO.Path.GetFileNameWithoutExtension(imagePath);
+                    image = CreateImage(imageFilePath);
+                    imageName = System.IO.Path.GetFileNameWithoutExtension(imageFilePath);
 
                     imagesDictionary.Add(imageName, image);
                 }
@@ -480,11 +480,14 @@ namespace FollowDemo
 
         private StrokeCollection CreateSketch(string filePath)
         {
-            //
+            // initialize XML processor for reading XML file
             SketchXmlProcessor processor = new SketchXmlProcessor();
 
-            //
+            // resample the sketch
             StrokeCollection sketch = processor.Read(filePath);
+            sketch = SketchTools.Resample(sketch, RESAMPLE_POINTS);
+
+            //
             StylusPointCollection boxPoints = new StylusPointCollection();
             boxPoints.Add(new StylusPoint(0, 0));
             boxPoints.Add(new StylusPoint(0, 471));
@@ -522,6 +525,71 @@ namespace FollowDemo
             StylusPoint lastPoint;
             int lastTime;
             double directDistance, reverseDistance;
+            StrokeCollection debugStrokes = new StrokeCollection(); // debug
+            for (int i = 0; i < userStrokes.Count; ++i)
+            {
+                // retrieve the current user and model strokes
+                // also retrieve the last point of the pre-resampled last model point
+                // due to resampling algorithm throwing away the last point
+                // (without this, the resampled model stroke will have one less point than the user stroke)
+                userStroke = userStrokes[i];
+                modelStroke = SketchTools.Clone(modelStrokes[i]); // clone model stroke so not affected
+
+                // get the number of mode stroke points
+                numPoints = modelStroke.StylusPoints.Count;
+
+                // resample the model stroke to match the number of user stroke points
+                // this code fragment also adds the last point and time to the stroke
+                lastPoint = userStroke.StylusPoints[userStroke.StylusPoints.Count - 1];
+                lastTime = ((int[])userStroke.GetPropertyData(SketchTools.TIMES_GUID))[userStroke.StylusPoints.Count - 1];
+                StrokeCollection tempStrokes = new StrokeCollection() { userStroke };
+                tempStrokes.AddPropertyData(SketchTools.LABEL_GUID, "");
+                userStroke = SketchTools.Resample(tempStrokes, numPoints)[0];
+                userStroke.StylusPoints.Add(lastPoint);
+                List<int> tempTimes = new List<int>() { lastTime };
+                tempTimes.AddRange((int[])userStroke.GetPropertyData(SketchTools.TIMES_GUID));
+                userStroke.AddPropertyData(SketchTools.TIMES_GUID, tempTimes.ToArray());
+
+                //// debug
+                //debugStrokes.Add(userStroke);
+
+                // create the reverse stroke and calculate the direct and reverse pairwise stroke distances
+                reverseStroke = SketchTools.Reverse(userStroke);
+                directDistance = SketchTools.Distance(modelStroke, userStroke);
+                reverseDistance = SketchTools.Distance(modelStroke, reverseStroke);
+
+                // reserve the stroke if the reverse pairwise distance is shorter
+                if (reverseDistance < directDistance)
+                {
+                    userStroke = reverseStroke;
+                }
+
+                // create the corresponding map stroke for each pairwise user and model stroke point
+                for (int j = 0; j < modelStroke.StylusPoints.Count; ++j)
+                {
+                    mapStroke = new Stroke(new StylusPointCollection() { userStroke.StylusPoints[j], modelStroke.StylusPoints[j] });
+                    mapStroke.DrawingAttributes = myMapVisuals;
+
+                    mapStrokes.Add(mapStroke);
+                }
+            }
+
+            //
+            return mapStrokes;
+        }
+
+        private StrokeCollection CreateMapping2(StrokeCollection userStrokes, StrokeCollection modelStrokes)
+        {
+            // initialize the list of map strokes
+            StrokeCollection mapStrokes = new StrokeCollection();
+
+            // iterate through each user and model strokes
+            int numPoints;
+            Stroke userStroke, modelStroke, reverseStroke, mapStroke;
+            StylusPoint lastPoint;
+            int lastTime;
+            double directDistance, reverseDistance;
+            StrokeCollection debugStrokes = new StrokeCollection(); // debug
             for (int i = 0; i < userStrokes.Count; ++i)
             {
                 // retrieve the current user and model strokes
@@ -546,6 +614,9 @@ namespace FollowDemo
                 tempTimes.AddRange((int[])modelStroke.GetPropertyData(SketchTools.TIMES_GUID));
                 modelStroke.AddPropertyData(SketchTools.TIMES_GUID, tempTimes.ToArray());
 
+                // debug
+                debugStrokes.Add(modelStroke);
+
                 // create the reverse stroke and calculate the direct and reverse pairwise stroke distances
                 reverseStroke = SketchTools.Reverse(modelStroke);
                 directDistance = SketchTools.Distance(userStroke, modelStroke);
@@ -569,6 +640,49 @@ namespace FollowDemo
 
             //
             return mapStrokes;
+        }
+
+        // debug
+        private void DebugStrokes(StrokeCollection strokes)
+        {
+            string debugFilePath = @"C:\Users\paultaele\Desktop\debug.txt";
+
+            using (StreamWriter file = new StreamWriter(debugFilePath))
+            {
+                foreach (Stroke stroke in strokes)
+                {
+                    foreach (StylusPoint points in stroke.StylusPoints)
+                    {
+                        string line = Math.Round(points.X) + "\t" + Math.Round(points.Y);
+
+                        file.WriteLine(line);
+                    }
+                }
+            }
+        }
+
+        // debug
+        private void DisplayPoints(StrokeCollection strokes)
+        {
+            var displayPoints = new List<Stroke>();
+
+            foreach (Stroke stroke in strokes)
+            {
+                foreach (StylusPoint point in stroke.StylusPoints)
+                {
+                    Stroke displayPoint
+                        = new Stroke(new StylusPointCollection() { new StylusPoint(point.X, point.Y) });
+                    displayPoint.DrawingAttributes.Color = Colors.Red;
+                    displayPoint.DrawingAttributes.Width = 15;
+                    displayPoint.DrawingAttributes.Height = 15;
+                    displayPoints.Add(displayPoint);
+                }
+            }
+
+            foreach (Stroke displayPoint in displayPoints)
+            {
+                MyCanvas.Strokes.Add(displayPoint);
+            }
         }
 
         #endregion
@@ -599,6 +713,8 @@ namespace FollowDemo
         public static readonly double ANIMATION_LINE_WIDTH = 10.0;
         public static readonly double USER_STROKE_SIZE = 5.0;
         public static readonly double MASK_OPACITY = 0.8;
+
+        public static readonly int RESAMPLE_POINTS = 256;
 
         #endregion
     }
