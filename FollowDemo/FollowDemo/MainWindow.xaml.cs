@@ -518,6 +518,35 @@ namespace FollowDemo
         {
             // initialize the list of map strokes
             StrokeCollection mapStrokes = new StrokeCollection();
+            string label = (string)modelStrokes.GetPropertyData(SketchTools.LABEL_GUID);
+
+            // iterate through each user and model strokes
+            Stroke userStroke, modelStroke, mapStroke;
+            for (int i = 0; i < userStrokes.Count; ++i)
+            {
+                //
+                userStroke = userStrokes[i];
+                modelStroke = modelStrokes[i];
+
+                // create the corresponding map stroke for each pairwise user and model stroke point
+                for (int j = 0; j < modelStroke.StylusPoints.Count; ++j)
+                {
+                    mapStroke = new Stroke(new StylusPointCollection() { userStroke.StylusPoints[j], modelStroke.StylusPoints[j] });
+                    mapStroke.DrawingAttributes = myMapVisuals;
+
+                    mapStrokes.Add(mapStroke);
+                }
+            }
+
+            //
+            return mapStrokes;
+        }
+
+        private StrokeCollection CreateMapping3(StrokeCollection userStrokes, StrokeCollection modelStrokes)
+        {
+            // initialize the list of map strokes
+            StrokeCollection mapStrokes = new StrokeCollection();
+            string label = (string)modelStrokes.GetPropertyData(SketchTools.LABEL_GUID);
 
             // iterate through each user and model strokes
             int numPoints;
@@ -525,15 +554,16 @@ namespace FollowDemo
             StylusPoint lastPoint;
             int lastTime;
             double directDistance, reverseDistance;
-            StrokeCollection debugStrokes = new StrokeCollection(); // debug
+
+            //
             for (int i = 0; i < userStrokes.Count; ++i)
             {
                 // retrieve the current user and model strokes
                 // also retrieve the last point of the pre-resampled last model point
                 // due to resampling algorithm throwing away the last point
                 // (without this, the resampled model stroke will have one less point than the user stroke)
-                userStroke = userStrokes[i];
-                modelStroke = SketchTools.Clone(modelStrokes[i]); // clone model stroke so not affected
+                userStroke = SketchTools.Clone(userStrokes[i]);
+                modelStroke = SketchTools.Clone(modelStrokes[i]);
 
                 // get the number of mode stroke points
                 numPoints = modelStroke.StylusPoints.Count;
@@ -549,9 +579,6 @@ namespace FollowDemo
                 List<int> tempTimes = new List<int>() { lastTime };
                 tempTimes.AddRange((int[])userStroke.GetPropertyData(SketchTools.TIMES_GUID));
                 userStroke.AddPropertyData(SketchTools.TIMES_GUID, tempTimes.ToArray());
-
-                //// debug
-                //debugStrokes.Add(userStroke);
 
                 // create the reverse stroke and calculate the direct and reverse pairwise stroke distances
                 reverseStroke = SketchTools.Reverse(userStroke);
@@ -711,10 +738,11 @@ namespace FollowDemo
 
         public static readonly double ANIMATION_TIME_SPAN = 5.0;
         public static readonly double ANIMATION_LINE_WIDTH = 10.0;
-        public static readonly double USER_STROKE_SIZE = 5.0;
+        //public static readonly double USER_STROKE_SIZE = 5.0;
+        public static readonly double USER_STROKE_SIZE = 0.5;
         public static readonly double MASK_OPACITY = 0.8;
 
-        public static readonly int RESAMPLE_POINTS = 256;
+        public static readonly int RESAMPLE_POINTS = 128;
 
         #endregion
     }
