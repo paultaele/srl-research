@@ -487,18 +487,19 @@ namespace FollowDemo
             StrokeCollection sketch = processor.Read(filePath);
             sketch = SketchTools.Resample(sketch, RESAMPLE_POINTS);
 
-            //
+            // wrap a box border around the sketch
+            // needed to ensure consistent scaling for each of the originally collected data
             StylusPointCollection boxPoints = new StylusPointCollection();
             boxPoints.Add(new StylusPoint(0, 0));
-            boxPoints.Add(new StylusPoint(0, 471));
-            boxPoints.Add(new StylusPoint(471, 471));
-            boxPoints.Add(new StylusPoint(471, 0));
+            boxPoints.Add(new StylusPoint(0, BOX_SIZE));
+            boxPoints.Add(new StylusPoint(BOX_SIZE, BOX_SIZE));
+            boxPoints.Add(new StylusPoint(BOX_SIZE, 0));
             boxPoints.Add(new StylusPoint(0, 0));
             Stroke box = new Stroke(boxPoints);
             box.AddPropertyData(SketchTools.TIMES_GUID, new int[boxPoints.Count]);
             sketch.Add(box);
 
-            //
+            // scale the sketch to the length (i.e., height) of the canvas
             sketch = SketchTools.Scale(sketch, MyCanvasBorder.Height, SketchTools.ScaleType.Proportional);
 
             // remove the last stroke from the sketch that is the box stroke
@@ -735,6 +736,8 @@ namespace FollowDemo
         public static readonly Color MODEL_STROKE_COLOR = Colors.Transparent;
         public static readonly Color MAP_STROKE_COLOR = Colors.Red;
         public static readonly Brush MASK_COLOR = Brushes.White;
+
+        public static readonly double BOX_SIZE = 471.0; // this size is based on the pixel length of the images used from data collection
 
         public static readonly double ANIMATION_TIME_SPAN = 5.0;
         public static readonly double ANIMATION_LINE_WIDTH = 10.0;

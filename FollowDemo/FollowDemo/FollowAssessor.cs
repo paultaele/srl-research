@@ -28,16 +28,14 @@ namespace FollowDemo
             userStrokes = SketchTools.Clone(userStrokes);
             modelStrokes = SketchTools.Clone(modelStrokes);
 
-            //SyncStrokes(...)
-
             // length test
             LengthTest(userStrokes, modelStrokes);
 
-            // closeness test
-            ClosenessTest(userStrokes, modelStrokes);
+            // accuracy (formerly, closeness) test
+            AccuracyTest(userStrokes, modelStrokes);
 
-            // smoothness test
-            SmoothnessTest(userStrokes, modelStrokes);
+            // precision (formerly, smoothness) test
+            PrecisionTest(userStrokes, modelStrokes);
 
             // direction test
             DirectionTest(userStrokes, modelStrokes);
@@ -45,13 +43,62 @@ namespace FollowDemo
 
         #region Tests
 
-        private void SmoothnessTest(StrokeCollection userStrokes, StrokeCollection modelStrokes)
+        private void PrecisionTest(StrokeCollection userStrokes, StrokeCollection modelStrokes)
         {
-            ;
+            // create the variables
+            StylusPointCollection userPoints, modelPoints;
+            StylusPoint userPoint;
+            List<double> distances;
+
+            // iterate through the user and model strokes
+            distances = new List<double>();
+            for (int i = 0; i < userStrokes.Count; ++i)
+            {
+                // get the points from the current user and model stroke
+                userPoints = userStrokes[i].StylusPoints;
+                modelPoints = modelStrokes[i].StylusPoints;
+
+                // iterate through each user points
+                for (int j = 0; j < userPoints.Count; ++j)
+                {
+                    userPoint = userPoints[j];
+
+                    // iterate through each model point
+                    double min = Double.MaxValue;
+                    foreach (StylusPoint modelPoint in modelPoints)
+                    {
+                        double distance = SketchTools.Distance(userPoint, modelPoint);
+                        if (distance < min) { min = distance; }
+                    }
+
+                    distances.Add(min);
+                }
+            }
+
+            //
+            int count = 0;
+            foreach (double distance in distances)
+            {
+                if (distance > 10.0)
+                {
+                    ++count;
+                }
+            }
+
+            //
+            double ratio = (double)count / (double)distances.Count;
+
+            //
+            if (ratio > PRECISION_THRESHOLD_LOW) { PrecisionResult = ResultType.Low; }
+            else if (ratio > PRECISION_THRESHOLD_MED) { PrecisionResult = ResultType.Med; }
+            else { PrecisionResult = ResultType.High; }
         }
 
         private void DirectionTest(StrokeCollection userStrokes, StrokeCollection modelStrokes)
         {
+            // note: this method works as is due to how the strokes are synced
+            // without this syncing, the code for the direction test would be much less trivial
+
             // initialize the variables
             Stroke userStroke;
             int[] userTimes;
@@ -79,7 +126,7 @@ namespace FollowDemo
             else                            { DirectionResult = ResultType.High; }
         }
 
-        private void ClosenessTest(StrokeCollection userStrokes, StrokeCollection modelStrokes)
+        private void AccuracyTest(StrokeCollection userStrokes, StrokeCollection modelStrokes)
         {
             // initialize the variables
             Stroke userStroke, modelStroke;
@@ -111,11 +158,11 @@ namespace FollowDemo
 
                     // case: current distance exceeds closeness threshold
                     // record the current distance as a closeness error
-                    if (distance > CLOSENESS_THRESHOLD_LOW)
+                    if (distance > ACCURACY_THRESHOLD_LOW)
                     {
                         ++numLow;
                     }
-                    else if (CLOSENESS_THRESHOLD_LOW >= distance && distance > CLOSENESS_THRESHOLD_MED)
+                    else if (ACCURACY_THRESHOLD_LOW >= distance && distance > ACCURACY_THRESHOLD_MED)
                     {
                         ++numMed;
                     }
@@ -128,9 +175,9 @@ namespace FollowDemo
             }
 
             //
-            if (numLow > 0)         { ClosenessResult = ResultType.Low; }
-            else if (numMed > 0)    { ClosenessResult = ResultType.Med; }
-            else                    { ClosenessResult = ResultType.High; }
+            if (numLow > 0)         { AccuracyResult = ResultType.Low; }
+            else if (numMed > 0)    { AccuracyResult = ResultType.Med; }
+            else                    { AccuracyResult = ResultType.High; }
         }
 
         private void LengthTest(StrokeCollection userStrokes, StrokeCollection modelStrokes)
@@ -185,130 +232,17 @@ namespace FollowDemo
 
         #endregion
 
-        #region Helper Methods
-
-        private StrokeCollection SyncStrokes(StrokeCollection userStrokes, StrokeCollection modelStrokes)
-        {
-            // initialize the list of map strokes
-            StrokeCollection syncedStrokes = new StrokeCollection();
-            string label = (string)modelStrokes.GetPropertyData(SketchTools.LABEL_GUID);
-
-            // iterate through each user and model strokes
-            int numPoints;
-            Stroke userStroke, modelStroke, reverseStroke;
-            StylusPoint lastPoint;
-            int lastTime;
-            double directDistance, reverseDistance;
-
-            //
-            for (int i = 0; i < userStrokes.Count; ++i)
-            {
-                // retrieve the current user and model strokes
-                // also retrieve the last point of the pre-resampled last model point
-                // due to resampling algorithm throwing away the last point
-                // (without this, the resampled model stroke will have one less point than the user stroke)
-                userStroke = userStrokes[i];
-                modelStroke = SketchTools.Clone(modelStrokes[i]);  // clone model stroke so not affected
-
-                // get the number of user stroke points
-                numPoints = modelStroke.StylusPoints.Count;
-
-                // resample the model stroke to match the number of user stroke points
-                // this code fragment also adds the last point and time to the stroke
-                lastPoint = userStroke.StylusPoints[userStroke.StylusPoints.Count - 1];
-                lastTime = ((int[])userStroke.GetPropertyData(SketchTools.TIMES_GUID))[userStroke.StylusPoints.Count - 1];
-                StrokeCollection tempStrokes = new StrokeCollection() { userStroke };
-                tempStrokes.AddPropertyData(SketchTools.LABEL_GUID, "");
-                userStroke = SketchTools.Resample(tempStrokes, numPoints)[0];
-                userStroke.StylusPoints.Add(lastPoint);
-                List<int> tempTimes = new List<int>() { lastTime };
-                tempTimes.AddRange((int[])userStroke.GetPropertyData(SketchTools.TIMES_GUID));
-                userStroke.AddPropertyData(SketchTools.TIMES_GUID, tempTimes.ToArray());
-
-                // create the reverse stroke and calculate the direct and reverse pairwise stroke distances
-                reverseStroke = SketchTools.Reverse(userStroke);
-                directDistance = SketchTools.Distance(modelStroke, userStroke);
-                reverseDistance = SketchTools.Distance(modelStroke, reverseStroke);
-
-                // reserve the stroke if the reverse pairwise distance is shorter
-                if (reverseDistance < directDistance)
-                {
-                    userStroke = reverseStroke;
-                }
-                syncedStrokes.Add(userStroke);
-            }
-
-            //
-            syncedStrokes.AddPropertyData(SketchTools.LABEL_GUID, label);
-            return syncedStrokes;
-        }
-
-
-        #endregion
-
-        #region Debug
-
-        private void Debug(List<double> distances)
-        {
-            string dirPath = @"C:\Users\paultaele\Desktop\debug\";
-            int count = Directory.GetFiles(dirPath).Length;
-            string filePath = dirPath + "debug_" + count + ".txt";
-            using (StreamWriter file = new StreamWriter(filePath))
-            {
-                for (int i = 0; i < distances.Count; ++i)
-                {
-                    file.WriteLine(distances[i]);
-                }
-            }
-        }
-
-        private void Debug(StrokeCollection userStrokes, StrokeCollection modelStrokes)
-        {
-            Stroke userStroke, modelStroke;
-            StylusPoint userPoint, modelPoint;
-
-            string dirPath = @"C:\Users\paultaele\Desktop\debug\";
-            int count = Directory.GetFiles(dirPath).Length;
-            string filePath = dirPath + "error_" + count + ".txt";
-            double distance;
-            using (StreamWriter file = new StreamWriter(filePath))
-            {
-                for (int i = 0; i < userStrokes.Count; ++i)
-                {
-                    // get the current user and model stroke
-                    userStroke = userStrokes[i];
-                    modelStroke = modelStrokes[i];
-
-                    // iterate through each point of the current user and model stroke
-                    for (int j = 0; j < userStroke.StylusPoints.Count; ++j)
-                    {
-                        // get the current user and model point
-                        userPoint = userStroke.StylusPoints[j];
-                        modelPoint = modelStroke.StylusPoints[j];
-
-                        distance = SketchTools.Distance(userPoint, modelPoint);
-
-                        file.Write(Math.Round(userPoint.X, 2) + "\t" + Math.Round(userPoint.Y, 2) + "\t");
-                        file.Write(Math.Round(modelPoint.X, 2) + "\t" + Math.Round(modelPoint.Y, 2) + "\t");
-                        file.WriteLine(distance);
-                    }
-                }
-            }
-        }
-
-        #endregion
-
         #region Properties and Enums
 
         public double CanvasSize { get; set; } // debug
 
         public ResultType LengthResult { get; private set; }
-        public ResultType ClosenessResult { get; private set; }
-        public ResultType SmoothnessResult { get; private set; }
+        public ResultType AccuracyResult { get; private set; }
+        public ResultType PrecisionResult { get; private set; }
         public ResultType DirectionResult { get; private set; }
 
         public ResultType[] LengthResults { get; private set; }
-        public ResultType[] ClosenessResults { get; private set; }
+        public ResultType[] AccuracyResults { get; private set; }
         public ResultType[] DirectionResults { get; private set; }
         public double[] LengthDebug { get; private set; }
 
@@ -323,8 +257,13 @@ namespace FollowDemo
         public static readonly double LENGTH_THRESHOLD_LOW = 0.10;
         public static readonly double LENGTH_THRESHOLD_MED = 0.05;
 
-        public static readonly double CLOSENESS_THRESHOLD_LOW = 40.0; // 12.5% of canvas width
-        public static readonly double CLOSENESS_THRESHOLD_MED = 25.0; //  5.0% of canvas width
+        // formerly closeness
+        public static readonly double ACCURACY_THRESHOLD_LOW = 40.0; // 6.0% of canvas width
+        public static readonly double ACCURACY_THRESHOLD_MED = 25.0; // 3.0% of canvas width
+
+        // formerly smoothness
+        public static readonly double PRECISION_THRESHOLD_LOW = 0.10;
+        public static readonly double PRECISION_THRESHOLD_MED = 0.04;
 
         #endregion
     }

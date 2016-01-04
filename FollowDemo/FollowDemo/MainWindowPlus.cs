@@ -323,13 +323,12 @@ namespace FollowDemo
                 IsModelDisplayed = true;
                 IsMappingDisplayed = true;
 
-                // display the mapping strokes between the user and model strokes
-                // also move the user strokes to the foreground by removing then re-adding them
-                //StrokeCollection userStrokes = myStrokes;
-                //StrokeCollection modelStrokes = myModelsDictionary[myLabels[myIndexer]];
-                // TODO: sync the strokes here
+                // sync the strokes here
                 StrokeCollection userStrokes, modelStrokes;
-                SyncStrokes(myStrokes, myModelsDictionary[myLabels[myIndexer]], out userStrokes, out modelStrokes);
+                StrokeCollection rawUserStrokes;
+                rawUserStrokes = myStrokes;
+                modelStrokes = myModelsDictionary[myLabels[myIndexer]];
+                userStrokes = SketchTools.SyncStrokes(rawUserStrokes, modelStrokes);
 
                 //
                 myMappingStrokes = CreateMapping(userStrokes, modelStrokes);
@@ -341,8 +340,8 @@ namespace FollowDemo
                 #region Assess
 
                 // TODO: assess the user's strokes
-                FollowAssessor assessor = new FollowAssessor(this); // debug version
-                //FollowAssessor assessor = new FollowAssessor(MyCanvas.ActualWidth);
+                //FollowAssessor assessor = new FollowAssessor(this); // debug version
+                FollowAssessor assessor = new FollowAssessor(MyCanvas.ActualWidth);
                 assessor.Run(userStrokes, modelStrokes);
 
                 //
@@ -362,18 +361,34 @@ namespace FollowDemo
                 }
 
                 //
-                FollowAssessor.ResultType closenessResult = assessor.ClosenessResult;
-                string closenessResultOutput = "";
-                switch (closenessResult)
+                FollowAssessor.ResultType accuracyResult = assessor.AccuracyResult;
+                string accuracyResultOutput = "";
+                switch (accuracyResult)
                 {
                     case FollowAssessor.ResultType.Low:
-                        closenessResultOutput = "★☆☆";
+                        accuracyResultOutput = "★☆☆";
                         break;
                     case FollowAssessor.ResultType.Med:
-                        closenessResultOutput = "★★☆";
+                        accuracyResultOutput = "★★☆";
                         break;
                     default:
-                        closenessResultOutput = "★★★";
+                        accuracyResultOutput = "★★★";
+                        break;
+                }
+
+                //
+                FollowAssessor.ResultType precisionResult = assessor.PrecisionResult;
+                string precisionResultOutput = "";
+                switch (precisionResult)
+                {
+                    case FollowAssessor.ResultType.Low:
+                        precisionResultOutput = "★☆☆";
+                        break;
+                    case FollowAssessor.ResultType.Med:
+                        precisionResultOutput = "★★☆";
+                        break;
+                    default:
+                        precisionResultOutput = "★★★";
                         break;
                 }
 
@@ -395,80 +410,14 @@ namespace FollowDemo
 
                 //
                 lengthResultOutput = "Length:\n" + lengthResultOutput + "\n\n";
-                closenessResultOutput = "Closeness:\n" + closenessResultOutput + "\n\n";
+                accuracyResultOutput = "Accuracy:\n" + accuracyResultOutput + "\n\n";
+                precisionResultOutput = "Precision:\n" + precisionResultOutput + "\n\n";
                 directionResultOutput = "Direction:\n" + directionResultOutput + "\n\n";
                 
                 //
-                MyOutputBlock.Text = lengthResultOutput + closenessResultOutput + directionResultOutput;
+                MyOutputBlock.Text = lengthResultOutput + accuracyResultOutput + precisionResultOutput + directionResultOutput;
 
                 #endregion
-            }
-        }
-
-        // TODO: include this into Srl.dll
-        private void SyncStrokes(StrokeCollection oldUserStrokes, StrokeCollection oldModelStrokes, out StrokeCollection userStrokes, out StrokeCollection modelStrokes)
-        {
-            // initialize the user and model strokes
-            userStrokes = new StrokeCollection();
-            modelStrokes = new StrokeCollection();
-            userStrokes.AddPropertyData(SketchTools.LABEL_GUID, "");
-            modelStrokes.AddPropertyData(SketchTools.LABEL_GUID, (string)oldModelStrokes.GetPropertyData(SketchTools.LABEL_GUID));
-
-            // initialize the other variables
-            int numPoints;
-            Stroke userStroke, modelStroke, reverseStroke;
-            StylusPoint lastPoint;
-            int lastTime;
-            double directDistance, reverseDistance;
-
-            // iterate through each user stroke
-            for (int i = 0; i < oldUserStrokes.Count; ++i)
-            {
-                // retrieve the current user and model strokes
-                // also retrieve the last point of the pre-resampled last model point
-                // due to resampling algorithm throwing away the last point
-                // (without this, the resampled model stroke will have one less point than the user stroke)
-                userStroke = SketchTools.Clone(oldUserStrokes[i]);
-                modelStroke = SketchTools.Clone(oldModelStrokes[i]);
-
-                // get the number of mode stroke points
-                numPoints = modelStroke.StylusPoints.Count;
-
-                // get the last point and time of the original (i.e., pre-resampled) user stroke
-                // this is needed since the resampling algorithm will leave out the last point due to how resampling is handled
-                // (i.e., because of the use of exceeding distance to add new resampled points in the resampling algorithm)
-                lastPoint = userStroke.StylusPoints[userStroke.StylusPoints.Count - 1];
-                lastTime = ((int[])userStroke.GetPropertyData(SketchTools.TIMES_GUID))[userStroke.StylusPoints.Count - 1];
-
-                // wrap the model stroke as a unistroke strokes list and then resample
-                // note #0: need to wrap since the resampling algorithm requires a strokes list
-                // note #1: must also add a blank label since a label is required for any stroke manipulating algorithms
-                StrokeCollection tempStrokes = new StrokeCollection() { userStroke };
-                tempStrokes.AddPropertyData(SketchTools.LABEL_GUID, "");
-
-                // unwrap the model stroke and add the last point
-                userStroke = SketchTools.Resample(tempStrokes, numPoints)[0];
-                userStroke.StylusPoints.Add(lastPoint);
-
-                // get the list of times, add the last point, and then add the list of times
-                List<int> tempTimes = new List<int>((int[])userStroke.GetPropertyData(SketchTools.TIMES_GUID));
-                tempTimes.Add(lastTime);
-                userStroke.AddPropertyData(SketchTools.TIMES_GUID, tempTimes.ToArray());
-                
-                // create the reverse stroke and calculate the direct and reverse pairwise stroke distances
-                reverseStroke = SketchTools.Reverse(userStroke);
-                directDistance = SketchTools.Distance(modelStroke, userStroke);
-                reverseDistance = SketchTools.Distance(modelStroke, reverseStroke);
-
-                // reserve the stroke if the reverse pairwise distance is shorter
-                if (reverseDistance < directDistance)
-                {
-                    userStroke = reverseStroke;
-                }
-
-                //
-                userStrokes.Add(userStroke);
-                modelStrokes.Add(modelStroke);
             }
         }
 

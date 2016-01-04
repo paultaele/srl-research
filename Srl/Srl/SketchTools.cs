@@ -554,6 +554,71 @@ namespace Srl.Tools
             return stroke;
         }
 
+        public static StrokeCollection SyncStrokes(StrokeCollection oldTargetStrokes, StrokeCollection oldBaseStrokes)
+        {
+            // initialize the target strokes
+            StrokeCollection targetStrokes = new StrokeCollection();
+            targetStrokes.AddPropertyData(SketchTools.LABEL_GUID, "");
+
+            // initialize the other variables
+            int numPoints;
+            Stroke targetStroke, baseStroke, reverseStroke;
+            StylusPoint lastPoint;
+            int lastTime;
+            double directDistance, reverseDistance;
+
+            // iterate through each user stroke
+            for (int i = 0; i < oldTargetStrokes.Count; ++i)
+            {
+                // retrieve the current user and model strokes
+                // also retrieve the last point of the pre-resampled last model point
+                // due to resampling algorithm throwing away the last point
+                // (without this, the resampled model stroke will have one less point than the user stroke)
+                targetStroke = SketchTools.Clone(oldTargetStrokes[i]);
+                baseStroke = SketchTools.Clone(oldBaseStrokes[i]);
+
+                // get the number of mode stroke points
+                numPoints = baseStroke.StylusPoints.Count;
+
+                // get the last point and time of the original (i.e., pre-resampled) user stroke
+                // this is needed since the resampling algorithm will leave out the last point due to how resampling is handled
+                // (i.e., because of the use of exceeding distance to add new resampled points in the resampling algorithm)
+                lastPoint = targetStroke.StylusPoints[targetStroke.StylusPoints.Count - 1];
+                lastTime = ((int[])targetStroke.GetPropertyData(SketchTools.TIMES_GUID))[targetStroke.StylusPoints.Count - 1];
+
+                // wrap the model stroke as a unistroke strokes list and then resample
+                // note #0: need to wrap since the resampling algorithm requires a strokes list
+                // note #1: must also add a blank label since a label is required for any stroke manipulating algorithms
+                StrokeCollection tempStrokes = new StrokeCollection() { targetStroke };
+                tempStrokes.AddPropertyData(SketchTools.LABEL_GUID, "");
+
+                // unwrap the model stroke and add the last point
+                targetStroke = SketchTools.Resample(tempStrokes, numPoints)[0];
+                targetStroke.StylusPoints.Add(lastPoint);
+
+                // get the list of times, add the last point, and then add the list of times
+                List<int> tempTimes = new List<int>((int[])targetStroke.GetPropertyData(SketchTools.TIMES_GUID));
+                tempTimes.Add(lastTime);
+                targetStroke.AddPropertyData(SketchTools.TIMES_GUID, tempTimes.ToArray());
+
+                // create the reverse stroke and calculate the direct and reverse pairwise stroke distances
+                reverseStroke = SketchTools.Reverse(targetStroke);
+                directDistance = SketchTools.Distance(baseStroke, targetStroke);
+                reverseDistance = SketchTools.Distance(baseStroke, reverseStroke);
+
+                // reserve the stroke if the reverse pairwise distance is shorter
+                if (reverseDistance < directDistance)
+                {
+                    targetStroke = reverseStroke;
+                }
+
+                //
+                targetStrokes.Add(targetStroke);
+            }
+
+            return targetStrokes;
+        }
+
         #endregion
 
         #region Fields and Enums
