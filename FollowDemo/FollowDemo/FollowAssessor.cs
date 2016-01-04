@@ -10,6 +10,8 @@ namespace FollowDemo
 {
     public class FollowAssessor
     {
+        #region Constructors
+
         public FollowAssessor(double size)
         {
             CanvasSize = size;
@@ -22,28 +24,137 @@ namespace FollowDemo
             myWindow = window;
         }
 
+        #endregion
+
         public void Run(StrokeCollection userStrokes, StrokeCollection modelStrokes)
         {
             // clone the original user and model strokes
             userStrokes = SketchTools.Clone(userStrokes);
             modelStrokes = SketchTools.Clone(modelStrokes);
 
-            // length test
-            LengthTest(userStrokes, modelStrokes);
+            // proportion test
+            ProportionTest(userStrokes, modelStrokes);
 
-            // accuracy (formerly, closeness) test
-            AccuracyTest(userStrokes, modelStrokes);
-
-            // precision (formerly, smoothness) test
+            // precision (formerly, closeness) test
             PrecisionTest(userStrokes, modelStrokes);
 
-            // direction test
-            DirectionTest(userStrokes, modelStrokes);
+            // accuracy (formerly, smoothness) test
+            AccuracyTest(userStrokes, modelStrokes);
+
+            // technique test
+            TechniqueTest(userStrokes, modelStrokes);
+
+            // overall test
+            OverallTest();
         }
 
         #region Tests
 
+        private void ProportionTest(StrokeCollection userStrokes, StrokeCollection modelStrokes)
+        {
+            // initialize the variables
+            Stroke userStroke, modelStroke;
+            double userStrokeLength, modelStrokeLength, userModelRatio, userCanvasRatio, score;
+            int numLow = 0;
+            int numMed = 0;
+            int numHigh = 0;
+            ResultType result;
+            List<ResultType> results = new List<ResultType>();
+
+            // iterate through each user and model stroke
+            for (int i = 0; i < userStrokes.Count; ++i)
+            {
+                // compute the metrics
+                userStroke = userStrokes[i];
+                modelStroke = modelStrokes[i];
+                userStrokeLength = SketchTools.PathLength(userStroke);
+                modelStrokeLength = SketchTools.PathLength(modelStroke);
+                userModelRatio = Math.Abs(1.0 - userStrokeLength / modelStrokeLength);
+                userCanvasRatio = userStrokeLength / CanvasSize;
+                if (userCanvasRatio > 1.0) { userCanvasRatio = 1.0; }
+
+                // calculate the score
+                score = userModelRatio * userCanvasRatio;
+                if (score > PROPORTION_THRESHOLD_LOW)
+                {
+                    result = ResultType.Low;
+                    ++numLow;
+                }
+                else if (PROPORTION_THRESHOLD_LOW >= score && score > PROPORTION_THRESHOLD_MED)
+                {
+                    result = ResultType.Med;
+                    ++numMed;
+                }
+                else
+                {
+                    result = ResultType.High;
+                    ++numHigh;
+                }
+                results.Add(result);
+            }
+
+            // get the list of results from all the symbol's strokes
+            ProportionResults = results.ToArray();
+            if (numLow > 0)         { ProportionResult = ResultType.Low; }
+            else if (numMed > 0)    { ProportionResult = ResultType.Med; }
+            else                    { ProportionResult = ResultType.High; }
+        }
+
         private void PrecisionTest(StrokeCollection userStrokes, StrokeCollection modelStrokes)
+        {
+            // initialize the variables
+            Stroke userStroke, modelStroke;
+            StylusPoint userPoint, modelPoint;
+            List<double> distances = new List<double>();
+            double distance;
+
+            // iterate through each user and model stroke
+            int count = 0;
+            int numLow = 0;
+            int numMed = 0;
+            int numHigh = 0;
+            for (int i = 0; i < userStrokes.Count; ++i)
+            {
+                // get the current user and model stroke
+                userStroke = userStrokes[i];
+                modelStroke = modelStrokes[i];
+
+                // iterate through each point of the current user and model stroke
+                for (int j = 0; j < userStroke.StylusPoints.Count; ++j)
+                {
+                    // get the current user and model point
+                    userPoint = userStroke.StylusPoints[j];
+                    modelPoint = modelStroke.StylusPoints[j];
+
+                    // calculate the distance between the current user and model point
+                    distance = SketchTools.Distance(userPoint, modelPoint) / CanvasSize;
+                    distances.Add(distance);
+
+                    // case: current distance exceeds closeness threshold
+                    // record the current distance as a closeness error
+                    if (distance > PRECISION_THRESHOLD_LOW)
+                    {
+                        ++numLow;
+                    }
+                    else if (PRECISION_THRESHOLD_LOW >= distance && distance >= PRECISION_THRESHOLD_MED)
+                    {
+                        ++numMed;
+                    }
+                    else
+                    {
+                        ++numHigh;
+                    }
+                    ++count;
+                }
+            }
+
+            //
+            if (numLow > 0) { PrecisionResult = ResultType.Low; }
+            else if (numMed > 0) { PrecisionResult = ResultType.Med; }
+            else { PrecisionResult = ResultType.High; }
+        }
+
+        private void AccuracyTest(StrokeCollection userStrokes, StrokeCollection modelStrokes)
         {
             // create the variables
             StylusPointCollection userPoints, modelPoints;
@@ -79,7 +190,7 @@ namespace FollowDemo
             int count = 0;
             foreach (double distance in distances)
             {
-                if (distance > 10.0)
+                if (distance > ACCURACY_DISTANCE_MIN)
                 {
                     ++count;
                 }
@@ -89,12 +200,12 @@ namespace FollowDemo
             double ratio = (double)count / (double)distances.Count;
 
             //
-            if (ratio > PRECISION_THRESHOLD_LOW) { PrecisionResult = ResultType.Low; }
-            else if (ratio > PRECISION_THRESHOLD_MED) { PrecisionResult = ResultType.Med; }
-            else { PrecisionResult = ResultType.High; }
+            if (ratio > ACCURACY_THRESHOLD_LOW) { AccuracyResult = ResultType.Low; }
+            else if (ratio > ACCURACY_THRESHOLD_MED) { AccuracyResult = ResultType.Med; }
+            else { AccuracyResult = ResultType.High; }
         }
 
-        private void DirectionTest(StrokeCollection userStrokes, StrokeCollection modelStrokes)
+        private void TechniqueTest(StrokeCollection userStrokes, StrokeCollection modelStrokes)
         {
             // note: this method works as is due to how the strokes are synced
             // without this syncing, the code for the direction test would be much less trivial
@@ -121,113 +232,23 @@ namespace FollowDemo
             }
 
             //
-            if (numIncorrect == numStrokes) { DirectionResult = ResultType.Low; }
-            else if (numIncorrect > 0)      { DirectionResult = ResultType.Med; }
-            else                            { DirectionResult = ResultType.High; }
+            if (numIncorrect == numStrokes) { TechniqueResult = ResultType.Low; }
+            else if (numIncorrect > 0) { TechniqueResult = ResultType.Med; }
+            else { TechniqueResult = ResultType.High; }
         }
 
-        private void AccuracyTest(StrokeCollection userStrokes, StrokeCollection modelStrokes)
+        private void OverallTest()
         {
-            // initialize the variables
-            Stroke userStroke, modelStroke;
-            StylusPoint userPoint, modelPoint;
-            List<double> distances = new List<double>();
-            double distance;
-
-            // iterate through each user and model stroke
-            int count = 0;
-            int numLow = 0;
-            int numMed = 0;
-            int numHigh = 0;
-            for (int i = 0; i < userStrokes.Count; ++i)
-            {
-                // get the current user and model stroke
-                userStroke = userStrokes[i];
-                modelStroke = modelStrokes[i];
-
-                // iterate through each point of the current user and model stroke
-                for (int j = 0; j < userStroke.StylusPoints.Count; ++j)
-                {
-                    // get the current user and model point
-                    userPoint = userStroke.StylusPoints[j];
-                    modelPoint = modelStroke.StylusPoints[j];
-
-                    // calculate the distance between the current user and model point
-                    distance = SketchTools.Distance(userPoint, modelPoint);
-                    distances.Add(distance);
-
-                    // case: current distance exceeds closeness threshold
-                    // record the current distance as a closeness error
-                    if (distance > ACCURACY_THRESHOLD_LOW)
-                    {
-                        ++numLow;
-                    }
-                    else if (ACCURACY_THRESHOLD_LOW >= distance && distance > ACCURACY_THRESHOLD_MED)
-                    {
-                        ++numMed;
-                    }
-                    else
-                    {
-                        ++numHigh;
-                    }
-                    ++count;
-                }
-            }
+            int proportion = (int)ProportionResult;
+            int precision = (int)PrecisionResult;
+            int accuracy = (int)AccuracyResult;
+            int technique = (int)TechniqueResult;
+            double overall = (double)(proportion + precision + accuracy + technique) / 4.0;
 
             //
-            if (numLow > 0)         { AccuracyResult = ResultType.Low; }
-            else if (numMed > 0)    { AccuracyResult = ResultType.Med; }
-            else                    { AccuracyResult = ResultType.High; }
-        }
-
-        private void LengthTest(StrokeCollection userStrokes, StrokeCollection modelStrokes)
-        {
-            // initialize the variables
-            Stroke userStroke, modelStroke;
-            double userStrokeLength, modelStrokeLength, userModelRatio, userCanvasRatio, score;
-            int numLow = 0;
-            int numMed = 0;
-            int numHigh = 0;
-            ResultType result;
-            List<ResultType> results = new List<ResultType>();
-
-            // iterate through each user and model stroke
-            for (int i = 0; i < userStrokes.Count; ++i)
-            {
-                // compute the metrics
-                userStroke = userStrokes[i];
-                modelStroke = modelStrokes[i];
-                userStrokeLength = SketchTools.PathLength(userStroke);
-                modelStrokeLength = SketchTools.PathLength(modelStroke);
-                userModelRatio = Math.Abs(1.0 - userStrokeLength / modelStrokeLength);
-                userCanvasRatio = userStrokeLength / CanvasSize;
-                if (userCanvasRatio > 1.0) { userCanvasRatio = 1.0; }
-
-                // calculate the score
-                score = userModelRatio * userCanvasRatio;
-                if (score > LENGTH_THRESHOLD_LOW)
-                {
-                    result = ResultType.Low;
-                    ++numLow;
-                }
-                else if (LENGTH_THRESHOLD_LOW >= score && score > LENGTH_THRESHOLD_MED)
-                {
-                    result = ResultType.Med;
-                    ++numMed;
-                }
-                else
-                {
-                    result = ResultType.High;
-                    ++numHigh;
-                }
-                results.Add(result);
-            }
-
-            // get the list of results from all the symbol's strokes
-            LengthResults = results.ToArray();
-            if (numLow > 0)         { LengthResult = ResultType.Low; }
-            else if (numMed > 0)    { LengthResult = ResultType.Med; }
-            else                    { LengthResult = ResultType.High; }
+            if (overall < 0.5) { OverallResult = ResultType.Low; }
+            else if (overall < 1.5) { OverallResult = ResultType.Med; }
+            else { OverallResult = ResultType.High; }
         }
 
         #endregion
@@ -236,17 +257,18 @@ namespace FollowDemo
 
         public double CanvasSize { get; set; } // debug
 
-        public ResultType LengthResult { get; private set; }
-        public ResultType AccuracyResult { get; private set; }
+        public ResultType ProportionResult { get; private set; }
         public ResultType PrecisionResult { get; private set; }
-        public ResultType DirectionResult { get; private set; }
+        public ResultType AccuracyResult { get; private set; }
+        public ResultType TechniqueResult { get; private set; }
+        public ResultType OverallResult { get; private set; }
 
-        public ResultType[] LengthResults { get; private set; }
-        public ResultType[] AccuracyResults { get; private set; }
-        public ResultType[] DirectionResults { get; private set; }
-        public double[] LengthDebug { get; private set; }
+        public ResultType[] ProportionResults { get; private set; }
+        public ResultType[] PrecisionResults { get; private set; }
+        public ResultType[] TechniqueResults { get; private set; }
+        public double[] ProportionDebug { get; private set; }
 
-        public enum ResultType { Low, Med, High }
+        public enum ResultType:int { Low = 0, Med = 1, High = 2 }
 
         #endregion
 
@@ -254,16 +276,20 @@ namespace FollowDemo
 
         private MainWindow myWindow; // debug
 
-        public static readonly double LENGTH_THRESHOLD_LOW = 0.10;
-        public static readonly double LENGTH_THRESHOLD_MED = 0.05;
+        public static readonly double PROPORTION_THRESHOLD_LOW = 0.10; // 10%
+        public static readonly double PROPORTION_THRESHOLD_MED = 0.05; //  5%
 
-        // formerly closeness
-        public static readonly double ACCURACY_THRESHOLD_LOW = 40.0; // 6.0% of canvas width
-        public static readonly double ACCURACY_THRESHOLD_MED = 25.0; // 3.0% of canvas width
+        public static readonly double PRECISION_THRESHOLD_LOW = 0.07; // 6.0% of canvas width
+        public static readonly double PRECISION_THRESHOLD_MED = 0.05; // 3.0% of canvas width
+        //public static readonly double PRECISION_THRESHOLD_LOW = 40.0; // 6.0% of canvas width
+        //public static readonly double PRECISION_THRESHOLD_MED = 25.0; // 3.0% of canvas width
+        //public static readonly double PRECISION_THRESHOLD_LOW = 30.0; // 6.0% of canvas width
+        //public static readonly double PRECISION_THRESHOLD_MED = 20.0; // 3.0% of canvas width
 
-        // formerly smoothness
-        public static readonly double PRECISION_THRESHOLD_LOW = 0.10;
-        public static readonly double PRECISION_THRESHOLD_MED = 0.04;
+        public static readonly double ACCURACY_THRESHOLD_LOW = 0.10; // 10%
+        public static readonly double ACCURACY_THRESHOLD_MED = 0.05; //  4%
+
+        private static readonly double ACCURACY_DISTANCE_MIN = 15.0;
 
         #endregion
     }

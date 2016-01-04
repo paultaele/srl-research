@@ -54,6 +54,9 @@ namespace FollowDemo
                 MyNextButton.IsEnabled = true;
             }
 
+            // 6. add the writing prompt
+            MyInstructionsBlock.Text = TEXT_PROMPT + myLabels[myIndexer].ToUpper();
+
             #region Boilerplate Code
 
             // initialize an empty list of strokes
@@ -378,10 +381,11 @@ namespace FollowDemo
             --myIndexer;
             myAnimationIndexer = 0;
 
-            // add the updated image and animated stroke
+            // add the updated image, animated stroke, and text prompt
             MyCanvas.Children.Add(myImagesDictionary[myLabels[myIndexer]]);
             MyCanvas.Children.Add(myMask);
             myAnimatedStroke = AnimateStroke(myModelsDictionary[myLabels[myIndexer]][myAnimationIndexer]);
+            MyInstructionsBlock.Text = TEXT_PROMPT + myLabels[myIndexer].ToUpper();
 
             // disable button if at limit of index
             MyNextButton.IsEnabled = true;
@@ -422,10 +426,11 @@ namespace FollowDemo
             ++myIndexer;
             myAnimationIndexer = 0;
 
-            // add the updated image and animated stroke
+            // add the updated image, animated stroke, and text prompt
             MyCanvas.Children.Add(myImagesDictionary[myLabels[myIndexer]]);
             MyCanvas.Children.Add(myMask);
             myAnimatedStroke = AnimateStroke(myModelsDictionary[myLabels[myIndexer]][myAnimationIndexer]);
+            MyInstructionsBlock.Text = TEXT_PROMPT + myLabels[myIndexer].ToUpper();
 
             // disable button if at limit of index
             MyBackButton.IsEnabled = true;
@@ -543,132 +548,9 @@ namespace FollowDemo
             return mapStrokes;
         }
 
-        private StrokeCollection CreateMapping3(StrokeCollection userStrokes, StrokeCollection modelStrokes)
-        {
-            // initialize the list of map strokes
-            StrokeCollection mapStrokes = new StrokeCollection();
-            string label = (string)modelStrokes.GetPropertyData(SketchTools.LABEL_GUID);
+        #endregion
 
-            // iterate through each user and model strokes
-            int numPoints;
-            Stroke userStroke, modelStroke, reverseStroke, mapStroke;
-            StylusPoint lastPoint;
-            int lastTime;
-            double directDistance, reverseDistance;
-
-            //
-            for (int i = 0; i < userStrokes.Count; ++i)
-            {
-                // retrieve the current user and model strokes
-                // also retrieve the last point of the pre-resampled last model point
-                // due to resampling algorithm throwing away the last point
-                // (without this, the resampled model stroke will have one less point than the user stroke)
-                userStroke = SketchTools.Clone(userStrokes[i]);
-                modelStroke = SketchTools.Clone(modelStrokes[i]);
-
-                // get the number of mode stroke points
-                numPoints = modelStroke.StylusPoints.Count;
-
-                // resample the model stroke to match the number of user stroke points
-                // this code fragment also adds the last point and time to the stroke
-                lastPoint = userStroke.StylusPoints[userStroke.StylusPoints.Count - 1];
-                lastTime = ((int[])userStroke.GetPropertyData(SketchTools.TIMES_GUID))[userStroke.StylusPoints.Count - 1];
-                StrokeCollection tempStrokes = new StrokeCollection() { userStroke };
-                tempStrokes.AddPropertyData(SketchTools.LABEL_GUID, "");
-                userStroke = SketchTools.Resample(tempStrokes, numPoints)[0];
-                userStroke.StylusPoints.Add(lastPoint);
-                List<int> tempTimes = new List<int>() { lastTime };
-                tempTimes.AddRange((int[])userStroke.GetPropertyData(SketchTools.TIMES_GUID));
-                userStroke.AddPropertyData(SketchTools.TIMES_GUID, tempTimes.ToArray());
-
-                // create the reverse stroke and calculate the direct and reverse pairwise stroke distances
-                reverseStroke = SketchTools.Reverse(userStroke);
-                directDistance = SketchTools.Distance(modelStroke, userStroke);
-                reverseDistance = SketchTools.Distance(modelStroke, reverseStroke);
-
-                // reserve the stroke if the reverse pairwise distance is shorter
-                if (reverseDistance < directDistance)
-                {
-                    userStroke = reverseStroke;
-                }
-
-                // create the corresponding map stroke for each pairwise user and model stroke point
-                for (int j = 0; j < modelStroke.StylusPoints.Count; ++j)
-                {
-                    mapStroke = new Stroke(new StylusPointCollection() { userStroke.StylusPoints[j], modelStroke.StylusPoints[j] });
-                    mapStroke.DrawingAttributes = myMapVisuals;
-
-                    mapStrokes.Add(mapStroke);
-                }
-            }
-
-            //
-            return mapStrokes;
-        }
-
-        private StrokeCollection CreateMapping2(StrokeCollection userStrokes, StrokeCollection modelStrokes)
-        {
-            // initialize the list of map strokes
-            StrokeCollection mapStrokes = new StrokeCollection();
-
-            // iterate through each user and model strokes
-            int numPoints;
-            Stroke userStroke, modelStroke, reverseStroke, mapStroke;
-            StylusPoint lastPoint;
-            int lastTime;
-            double directDistance, reverseDistance;
-            StrokeCollection debugStrokes = new StrokeCollection(); // debug
-            for (int i = 0; i < userStrokes.Count; ++i)
-            {
-                // retrieve the current user and model strokes
-                // also retrieve the last point of the pre-resampled last model point
-                // due to resampling algorithm throwing away the last point
-                // (without this, the resampled model stroke will have one less point than the user stroke)
-                userStroke = userStrokes[i];
-                modelStroke = SketchTools.Clone(modelStrokes[i]);
-
-                // get the number of user stroke points
-                numPoints = userStroke.StylusPoints.Count;
-
-                // resample the model stroke to match the number of user stroke points
-                // this code fragment also adds the last point and time to the stroke
-                lastPoint = modelStroke.StylusPoints[modelStroke.StylusPoints.Count - 1];
-                lastTime = ((int[])modelStroke.GetPropertyData(SketchTools.TIMES_GUID))[modelStroke.StylusPoints.Count - 1];
-                StrokeCollection tempStrokes = new StrokeCollection() { modelStroke };
-                tempStrokes.AddPropertyData(SketchTools.LABEL_GUID, "");
-                modelStroke = SketchTools.Resample(tempStrokes, numPoints)[0];
-                modelStroke.StylusPoints.Add(lastPoint);
-                List<int> tempTimes = new List<int>() { lastTime };
-                tempTimes.AddRange((int[])modelStroke.GetPropertyData(SketchTools.TIMES_GUID));
-                modelStroke.AddPropertyData(SketchTools.TIMES_GUID, tempTimes.ToArray());
-
-                // debug
-                debugStrokes.Add(modelStroke);
-
-                // create the reverse stroke and calculate the direct and reverse pairwise stroke distances
-                reverseStroke = SketchTools.Reverse(modelStroke);
-                directDistance = SketchTools.Distance(userStroke, modelStroke);
-                reverseDistance = SketchTools.Distance(userStroke, reverseStroke);
-
-                // reserve the stroke if the reverse pairwise distance is shorter
-                if (reverseDistance < directDistance)
-                {
-                    modelStroke = reverseStroke;
-                }
-
-                // create the corresponding map stroke for each pairwise user and model stroke point
-                for (int j = 0; j < userStroke.StylusPoints.Count; ++j)
-                {
-                    mapStroke = new Stroke(new StylusPointCollection() { userStroke.StylusPoints[j], modelStroke.StylusPoints[j] });
-                    mapStroke.DrawingAttributes = myMapVisuals;
-
-                    mapStrokes.Add(mapStroke);
-                }
-            }
-
-            //
-            return mapStrokes;
-        }
+        #region Debug
 
         // debug
         private void DebugStrokes(StrokeCollection strokes)
@@ -728,8 +610,10 @@ namespace FollowDemo
         private List<Line> myAnimatedStroke;
         private StrokeCollection myMappingStrokes;
 
-        public static readonly string MODELS_DIR = @"C:\Users\paultaele\Documents\GitHub\srl-research\data\katakana\models";
-        public static readonly string IMAGES_DIR = @"C:\Users\paultaele\Documents\GitHub\srl-research\data\katakana\images";
+        public static readonly string MODELS_DIR = @"C:\Users\paultaele\Documents\GitHub\srl-research\data\hiragana\models";
+        public static readonly string IMAGES_DIR = @"C:\Users\paultaele\Documents\GitHub\srl-research\data\hiragana\images";
+
+        public static readonly string TEXT_PROMPT = "Please write: ";
 
         public static readonly Brush ANIMATION_LINE_COLOR = Brushes.DarkBlue;
         public static readonly Color USER_STROKE_COLOR = Colors.Black;
@@ -738,6 +622,8 @@ namespace FollowDemo
         public static readonly Brush MASK_COLOR = Brushes.White;
 
         public static readonly double BOX_SIZE = 471.0; // this size is based on the pixel length of the images used from data collection
+                                                        // this value was measured manually based on the image used in the data collection computer
+                                                        // TODO: sync the box size to 500 and re-save XML for future usage for nice round number
 
         public static readonly double ANIMATION_TIME_SPAN = 5.0;
         public static readonly double ANIMATION_LINE_WIDTH = 10.0;

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Documents;
 using System.Windows.Ink;
 using System.Windows.Input;
 using System.Windows.Shapes;
@@ -345,34 +346,18 @@ namespace FollowDemo
                 assessor.Run(userStrokes, modelStrokes);
 
                 //
-                FollowAssessor.ResultType lengthResult = assessor.LengthResult;
-                string lengthResultOutput = "";
-                switch (lengthResult)
+                FollowAssessor.ResultType proportionResult = assessor.ProportionResult;
+                string proportionResultOutput = "";
+                switch (proportionResult)
                 {
                     case FollowAssessor.ResultType.Low:
-                        lengthResultOutput = "★☆☆";
+                        proportionResultOutput = "★☆☆";
                         break;
                     case FollowAssessor.ResultType.Med:
-                        lengthResultOutput = "★★☆";
+                        proportionResultOutput = "★★☆";
                         break;
                     default:
-                        lengthResultOutput = "★★★";
-                        break;
-                }
-
-                //
-                FollowAssessor.ResultType accuracyResult = assessor.AccuracyResult;
-                string accuracyResultOutput = "";
-                switch (accuracyResult)
-                {
-                    case FollowAssessor.ResultType.Low:
-                        accuracyResultOutput = "★☆☆";
-                        break;
-                    case FollowAssessor.ResultType.Med:
-                        accuracyResultOutput = "★★☆";
-                        break;
-                    default:
-                        accuracyResultOutput = "★★★";
+                        proportionResultOutput = "★★★";
                         break;
                 }
 
@@ -393,29 +378,75 @@ namespace FollowDemo
                 }
 
                 //
-                FollowAssessor.ResultType directionResult = assessor.DirectionResult;
-                string directionResultOutput = "";
-                switch (directionResult)
+                FollowAssessor.ResultType accuracyResult = assessor.AccuracyResult;
+                string accuracyResultOutput = "";
+                switch (accuracyResult)
                 {
                     case FollowAssessor.ResultType.Low:
-                        directionResultOutput = "★☆☆";
+                        accuracyResultOutput = "★☆☆";
                         break;
                     case FollowAssessor.ResultType.Med:
-                        directionResultOutput = "★★☆";
+                        accuracyResultOutput = "★★☆";
                         break;
                     default:
-                        directionResultOutput = "★★★";
+                        accuracyResultOutput = "★★★";
                         break;
                 }
 
                 //
-                lengthResultOutput = "Length:\n" + lengthResultOutput + "\n\n";
-                accuracyResultOutput = "Accuracy:\n" + accuracyResultOutput + "\n\n";
-                precisionResultOutput = "Precision:\n" + precisionResultOutput + "\n\n";
-                directionResultOutput = "Direction:\n" + directionResultOutput + "\n\n";
-                
+                FollowAssessor.ResultType techniqueResult = assessor.TechniqueResult;
+                string techniqueResultOutput = "";
+                switch (techniqueResult)
+                {
+                    case FollowAssessor.ResultType.Low:
+                        techniqueResultOutput = "★☆☆";
+                        break;
+                    case FollowAssessor.ResultType.Med:
+                        techniqueResultOutput = "★★☆";
+                        break;
+                    default:
+                        techniqueResultOutput = "★★★";
+                        break;
+                }
+
                 //
-                MyOutputBlock.Text = lengthResultOutput + accuracyResultOutput + precisionResultOutput + directionResultOutput;
+                FollowAssessor.ResultType overallResult = assessor.OverallResult;
+                string overallResultOutput = "";
+                switch (overallResult)
+                {
+                    case FollowAssessor.ResultType.Low:
+                        overallResultOutput = "★☆☆";
+                        break;
+                    case FollowAssessor.ResultType.Med:
+                        overallResultOutput = "★★☆";
+                        break;
+                    default:
+                        overallResultOutput = "★★★";
+                        break;
+                }
+
+                //
+                proportionResultOutput = "Proportion:\n" + proportionResultOutput + "\n\n";
+                precisionResultOutput = "Precision:\n" + precisionResultOutput + "\n\n";
+                accuracyResultOutput = "Accuracy:\n" + accuracyResultOutput + "\n\n";
+                techniqueResultOutput = "Technique:\n" + techniqueResultOutput + "\n\n";
+                string overallResultOutput1 = "OVERALL:\n";
+                string overallResultOutput2 = overallResultOutput + "\n\n";
+                Run run1 = new Run(overallResultOutput1);
+                run1.FontSize = 50;
+                ////run1.FontWeight = FontWeights.Bold;
+                Run run2 = new Run(overallResultOutput2);
+                run2.FontSize = 90;
+                //run2.FontWeight = FontWeights.Bold;
+
+                //
+                //MyOutputBlock.Text = proportionResultOutput + precisionResultOutput + accuracyResultOutput + techniqueResultOutput + overallResultOutput    ;
+                MyOutputBlock.Inlines.Add(proportionResultOutput);
+                MyOutputBlock.Inlines.Add(precisionResultOutput);
+                MyOutputBlock.Inlines.Add(accuracyResultOutput);
+                MyOutputBlock.Inlines.Add(techniqueResultOutput);
+                MyOutputBlock.Inlines.Add(run1);
+                MyOutputBlock.Inlines.Add(run2);
 
                 #endregion
             }
