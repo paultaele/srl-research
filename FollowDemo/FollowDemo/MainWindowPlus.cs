@@ -315,6 +315,9 @@ namespace FollowDemo
             // once animations are done, then it is time for assessment
             if (IsAnimationDone)
             {
+                // disable canvas
+                MyCanvas.IsEnabled = false;
+
                 // IMPORTANT! first assign a dummy label to mystrokes before proceeding
                 // needed to do later processing
                 myStrokes.AddPropertyData(SketchTools.LABEL_GUID, "");

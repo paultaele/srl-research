@@ -354,6 +354,7 @@ namespace FollowDemo
         {
             // disable the canvas initially (to allow for animation to finish drawing)
             if (!CAN_INTERRUPT) { MyCanvas.IsEnabled = false; }
+            else { MyCanvas.IsEnabled = true; }
 
             // clear output panel
             MyOutputBlock.Text = "";
@@ -399,6 +400,7 @@ namespace FollowDemo
         {
             // disable the canvas initially (to allow for animation to finish drawing)
             if (!CAN_INTERRUPT) { MyCanvas.IsEnabled = false; }
+            else { MyCanvas.IsEnabled = true; }
 
             // clear output panel
             MyOutputBlock.Text = "";
