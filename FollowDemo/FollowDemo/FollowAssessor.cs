@@ -32,8 +32,8 @@ namespace FollowDemo
             userStrokes = SketchTools.Clone(userStrokes);
             modelStrokes = SketchTools.Clone(modelStrokes);
 
-            // proportion test
-            ProportionTest(userStrokes, modelStrokes);
+            // length test
+            LengthTest(userStrokes, modelStrokes);
 
             // precision (formerly, closeness) test
             PrecisionTest(userStrokes, modelStrokes);
@@ -41,16 +41,19 @@ namespace FollowDemo
             // accuracy (formerly, smoothness) test
             AccuracyTest(userStrokes, modelStrokes);
 
-            // technique test
-            TechniqueTest(userStrokes, modelStrokes);
+            // direction test
+            DirectionTest(userStrokes, modelStrokes);
 
-            // overall test
-            OverallTest();
+            // visual test
+            VisualTest();
+
+            // technique test
+            TechniqueTest();
         }
 
         #region Tests
 
-        private void ProportionTest(StrokeCollection userStrokes, StrokeCollection modelStrokes)
+        private void LengthTest(StrokeCollection userStrokes, StrokeCollection modelStrokes)
         {
             // initialize the variables
             Stroke userStroke, modelStroke;
@@ -75,12 +78,12 @@ namespace FollowDemo
 
                 // calculate the score
                 score = userModelRatio * userCanvasRatio;
-                if (score > PROPORTION_THRESHOLD_LOW)
+                if (score > LENGTH_THRESHOLD_LOW)
                 {
                     result = ResultType.Low;
                     ++numLow;
                 }
-                else if (PROPORTION_THRESHOLD_LOW >= score && score > PROPORTION_THRESHOLD_MED)
+                else if (LENGTH_THRESHOLD_LOW >= score && score > LENGTH_THRESHOLD_MED)
                 {
                     result = ResultType.Med;
                     ++numMed;
@@ -94,10 +97,10 @@ namespace FollowDemo
             }
 
             // get the list of results from all the symbol's strokes
-            ProportionResults = results.ToArray();
-            if (numLow > 0)         { ProportionResult = ResultType.Low; }
-            else if (numMed > 0)    { ProportionResult = ResultType.Med; }
-            else                    { ProportionResult = ResultType.High; }
+            LengthResults = results.ToArray();
+            if (numLow > 0)         { LengthResult = ResultType.Low; }
+            else if (numMed > 0)    { LengthResult = ResultType.Med; }
+            else                    { LengthResult = ResultType.High; }
         }
 
         private void PrecisionTest(StrokeCollection userStrokes, StrokeCollection modelStrokes)
@@ -205,7 +208,7 @@ namespace FollowDemo
             else { AccuracyResult = ResultType.High; }
         }
 
-        private void TechniqueTest(StrokeCollection userStrokes, StrokeCollection modelStrokes)
+        private void DirectionTest(StrokeCollection userStrokes, StrokeCollection modelStrokes)
         {
             // note: this method works as is due to how the strokes are synced
             // without this syncing, the code for the direction test would be much less trivial
@@ -232,23 +235,33 @@ namespace FollowDemo
             }
 
             //
-            if (numIncorrect == numStrokes) { TechniqueResult = ResultType.Low; }
-            else if (numIncorrect > 0) { TechniqueResult = ResultType.Med; }
-            else { TechniqueResult = ResultType.High; }
+            if (numIncorrect == numStrokes) { DirectionResult = ResultType.Low; }
+            else if (numIncorrect > 0) { DirectionResult = ResultType.Med; }
+            else { DirectionResult = ResultType.High; }
         }
 
-        private void OverallTest()
+        private void VisualTest()
         {
-            int proportion = (int)ProportionResult;
+            int length = (int)LengthResult;
             int precision = (int)PrecisionResult;
             int accuracy = (int)AccuracyResult;
-            int technique = (int)TechniqueResult;
-            double overall = (double)(proportion + precision + accuracy + technique) / 4.0;
+            double visual = (double)(length + precision + accuracy) / 3.0;
 
             //
-            if (overall < 0.5) { OverallResult = ResultType.Low; }
-            else if (overall < 1.5) { OverallResult = ResultType.Med; }
-            else { OverallResult = ResultType.High; }
+            if (visual < 0.5)       { VisualResult = ResultType.Low; }
+            else if (visual < 1.5)  { VisualResult = ResultType.Med; }
+            else                    { VisualResult = ResultType.High; }
+        }
+
+        private void TechniqueTest()
+        {
+            int direction = (int)DirectionResult;
+            double technique = (double)(direction) / 1.0;
+
+            //
+            if (technique < 0.5)        { TechniqueResult = ResultType.Low; }
+            else if (technique < 1.5)   { TechniqueResult = ResultType.Med; }
+            else                        { TechniqueResult = ResultType.High; }
         }
 
         #endregion
@@ -257,15 +270,16 @@ namespace FollowDemo
 
         public double CanvasSize { get; set; } // debug
 
-        public ResultType ProportionResult { get; private set; }
+        public ResultType LengthResult { get; private set; }
         public ResultType PrecisionResult { get; private set; }
         public ResultType AccuracyResult { get; private set; }
+        public ResultType DirectionResult { get; private set; }
+        public ResultType VisualResult { get; private set; }
         public ResultType TechniqueResult { get; private set; }
-        public ResultType OverallResult { get; private set; }
 
-        public ResultType[] ProportionResults { get; private set; }
+        public ResultType[] LengthResults { get; private set; }
         public ResultType[] PrecisionResults { get; private set; }
-        public ResultType[] TechniqueResults { get; private set; }
+        public ResultType[] DirectionResults { get; private set; }
         public double[] ProportionDebug { get; private set; }
 
         public enum ResultType:int { Low = 0, Med = 1, High = 2 }
@@ -276,8 +290,8 @@ namespace FollowDemo
 
         private MainWindow myWindow; // debug
 
-        public static readonly double PROPORTION_THRESHOLD_LOW = 0.10; // 10%
-        public static readonly double PROPORTION_THRESHOLD_MED = 0.05; //  5%
+        public static readonly double LENGTH_THRESHOLD_LOW = 0.10; // 10%
+        public static readonly double LENGTH_THRESHOLD_MED = 0.05; //  5%
 
         public static readonly double PRECISION_THRESHOLD_LOW = 0.07; // 6.0% of canvas width
         public static readonly double PRECISION_THRESHOLD_MED = 0.05; // 3.0% of canvas width

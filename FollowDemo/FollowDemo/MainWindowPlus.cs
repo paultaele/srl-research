@@ -349,18 +349,18 @@ namespace FollowDemo
                 assessor.Run(userStrokes, modelStrokes);
 
                 //
-                FollowAssessor.ResultType proportionResult = assessor.ProportionResult;
-                string proportionResultOutput = "";
+                FollowAssessor.ResultType proportionResult = assessor.LengthResult;
+                string lengthResultOutput = "";
                 switch (proportionResult)
                 {
                     case FollowAssessor.ResultType.Low:
-                        proportionResultOutput = "★☆☆";
+                        lengthResultOutput = "★☆☆";
                         break;
                     case FollowAssessor.ResultType.Med:
-                        proportionResultOutput = "★★☆";
+                        lengthResultOutput = "★★☆";
                         break;
                     default:
-                        proportionResultOutput = "★★★";
+                        lengthResultOutput = "★★★";
                         break;
                 }
 
@@ -397,6 +397,38 @@ namespace FollowDemo
                 }
 
                 //
+                FollowAssessor.ResultType directionResult = assessor.DirectionResult;
+                string directionResultOutput = "";
+                switch (directionResult)
+                {
+                    case FollowAssessor.ResultType.Low:
+                        directionResultOutput = "★☆☆";
+                        break;
+                    case FollowAssessor.ResultType.Med:
+                        directionResultOutput = "★★☆";
+                        break;
+                    default:
+                        directionResultOutput = "★★★";
+                        break;
+                }
+
+                //
+                FollowAssessor.ResultType visualResult = assessor.VisualResult;
+                string visualResultOutput = "";
+                switch (visualResult)
+                {
+                    case FollowAssessor.ResultType.Low:
+                        visualResultOutput = "★☆☆";
+                        break;
+                    case FollowAssessor.ResultType.Med:
+                        visualResultOutput = "★★☆";
+                        break;
+                    default:
+                        visualResultOutput = "★★★";
+                        break;
+                }
+
+                //
                 FollowAssessor.ResultType techniqueResult = assessor.TechniqueResult;
                 string techniqueResultOutput = "";
                 switch (techniqueResult)
@@ -413,43 +445,48 @@ namespace FollowDemo
                 }
 
                 //
-                FollowAssessor.ResultType overallResult = assessor.OverallResult;
-                string overallResultOutput = "";
-                switch (overallResult)
-                {
-                    case FollowAssessor.ResultType.Low:
-                        overallResultOutput = "★☆☆";
-                        break;
-                    case FollowAssessor.ResultType.Med:
-                        overallResultOutput = "★★☆";
-                        break;
-                    default:
-                        overallResultOutput = "★★★";
-                        break;
-                }
+                Run lengthLabel, precisionLabel, accuracyLabel, directionLabel;
+                //Run lengthStars, precisionStars, accuracyStars, directionStars;
+                lengthLabel     = new Run(lengthResultOutput + "\tLength" + "\n");
+                precisionLabel  = new Run(precisionResultOutput + "\tPrecision" + "\n");
+                accuracyLabel   = new Run(accuracyResultOutput + "\tAccuracy" + "\n");
+                directionLabel  = new Run(directionResultOutput + "\tDirection" + "\n");
+                lengthLabel.FontSize    = 24;
+                precisionLabel.FontSize = 24;
+                accuracyLabel.FontSize  = 24;
+                directionLabel.FontSize = 24;
+                lengthLabel.FontWeight      = FontWeights.Bold;
+                precisionLabel.FontWeight   = FontWeights.Bold;
+                accuracyLabel.FontWeight    = FontWeights.Bold;
+                directionLabel.FontWeight   = FontWeights.Bold;
 
                 //
-                proportionResultOutput = "Proportion:\n" + proportionResultOutput + "\n\n";
-                precisionResultOutput = "Precision:\n" + precisionResultOutput + "\n\n";
-                accuracyResultOutput = "Accuracy:\n" + accuracyResultOutput + "\n\n";
-                techniqueResultOutput = "Technique:\n" + techniqueResultOutput + "\n\n";
-                string overallResultOutput1 = "OVERALL:\n";
-                string overallResultOutput2 = overallResultOutput + "\n\n";
-                Run run1 = new Run(overallResultOutput1);
-                run1.FontSize = 50;
-                ////run1.FontWeight = FontWeights.Bold;
-                Run run2 = new Run(overallResultOutput2);
-                run2.FontSize = 90;
-                //run2.FontWeight = FontWeights.Bold;
+                MyOutputBlock.Inlines.Add(lengthLabel);
+                MyOutputBlock.Inlines.Add(precisionLabel);
+                MyOutputBlock.Inlines.Add(accuracyLabel);
+                MyOutputBlock.Inlines.Add(directionLabel);
 
                 //
-                //MyOutputBlock.Text = proportionResultOutput + precisionResultOutput + accuracyResultOutput + techniqueResultOutput + overallResultOutput    ;
-                MyOutputBlock.Inlines.Add(proportionResultOutput);
-                MyOutputBlock.Inlines.Add(precisionResultOutput);
-                MyOutputBlock.Inlines.Add(accuracyResultOutput);
-                MyOutputBlock.Inlines.Add(techniqueResultOutput);
-                MyOutputBlock.Inlines.Add(run1);
-                MyOutputBlock.Inlines.Add(run2);
+                MyOutputBlock.Inlines.Add("\n\n\n");
+
+                //
+                Run visualLabel, techniqueLabel, visualStars, techniqueStars;
+                visualStars     = new Run(visualResultOutput + "\n");
+                visualLabel     = new Run("VISUAL\n\n");
+                techniqueStars  = new Run(techniqueResultOutput + "\n");
+                techniqueLabel  = new Run("TECHNIQUE\n\n");
+                visualLabel.FontWeight = FontWeights.Bold;
+                techniqueLabel.FontWeight = FontWeights.Bold;
+                visualLabel.FontSize    = 30;
+                visualStars.FontSize    = 80;
+                techniqueLabel.FontSize = 30;
+                techniqueStars.FontSize = 80;
+
+                //
+                MyOutputBlock.Inlines.Add(visualStars);
+                MyOutputBlock.Inlines.Add(visualLabel);
+                MyOutputBlock.Inlines.Add(techniqueStars);
+                MyOutputBlock.Inlines.Add(techniqueLabel);
 
                 #endregion
             }
