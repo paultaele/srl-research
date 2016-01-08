@@ -612,8 +612,10 @@ namespace FollowDemo
         private List<Line> myAnimatedStroke;
         private StrokeCollection myMappingStrokes;
 
-        public static readonly string MODELS_DIR = @"C:\Users\paultaele\Documents\GitHub\srl-research\data\hiragana\models";
-        public static readonly string IMAGES_DIR = @"C:\Users\paultaele\Documents\GitHub\srl-research\data\hiragana\images";
+        public static readonly string SOURCE_DIR = @"C:\Users\pault\Documents\GitHub\srl-research\";
+        //public static readonly string SOURCE_DIR = System.IO.Path.GetFullPath(@".\..\..\..\..\");
+        public static readonly string MODELS_DIR = SOURCE_DIR + @"data\hiragana\models";
+        public static readonly string IMAGES_DIR = SOURCE_DIR + @"data\hiragana\images";
 
         public static readonly string TEXT_PROMPT = "Please write: ";
 
