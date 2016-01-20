@@ -612,7 +612,7 @@ namespace FollowDemo
         private List<Line> myAnimatedStroke;
         private StrokeCollection myMappingStrokes;
 
-        public static readonly string SOURCE_DIR = @"C:\Users\pault\Documents\GitHub\srl-research\";
+        public static readonly string SOURCE_DIR = @"C:\Users\paultaele\Documents\GitHub\srl-research\";
         //public static readonly string SOURCE_DIR = System.IO.Path.GetFullPath(@".\..\..\..\..\");
         public static readonly string MODELS_DIR = SOURCE_DIR + @"data\hiragana\models";
         public static readonly string IMAGES_DIR = SOURCE_DIR + @"data\hiragana\images";
@@ -631,7 +631,7 @@ namespace FollowDemo
 
         public static readonly double ANIMATION_TIME_SPAN = 5.0;
         public static readonly double ANIMATION_LINE_WIDTH = 10.0;
-        public static readonly double USER_STROKE_SIZE = 5.0;
+        public static readonly double USER_STROKE_SIZE = 10.0;
         public static readonly double MASK_OPACITY = 0.8;
 
         public static readonly int RESAMPLE_POINTS = 256;

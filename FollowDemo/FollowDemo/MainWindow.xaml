@@ -8,41 +8,31 @@
         Title="Follow Demo" Name="MyWindow" Loaded="MyWindow_Loaded" SizeChanged="MyWindow_SizeChanged" ContentRendered="MyWindow_ContentRendered">
 
     <!-- ENTIRE INTERFACE -->
-    <Grid Background="Gray">
-        <!--<Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-
-        --><!-- MENU BAR --><!--
-        <Menu Grid.Row="0">
-            <MenuItem Header="_File">
-                <MenuItem Header="_Load">
-                    <MenuItem Header="_Data" Name="MyLoadDataItem"/>
-                    <MenuItem Header="_Images" Name="MyLoadImagesItem"/>
-                </MenuItem>
-                <Separator/>
-                <MenuItem Header="_Exit" Name="MyExitItem" Click="MyExitItem_Click"/>
-            </MenuItem>
-        </Menu>-->
+    <Grid Background="LightGray">
 
         <!-- CORE AREA -->
-        <!--<Grid Grid.Row="1">-->
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="3*"/>
-                <ColumnDefinition Width="7*"/>
+                <ColumnDefinition Width="6*"/>
+                <ColumnDefinition Width="4*"/>
             </Grid.ColumnDefinitions>
 
             <!-- OUTPUT AREA -->
-            <Grid Grid.Column="0">
-                <Border Margin="10" BorderBrush="Black" Background="LightGray" BorderThickness="5">
-                    <TextBlock Name="MyOutputBlock" Background="LightGray" FontFamily="Consolas" FontSize="30" Margin="10"/>
+            <Grid Grid.Column="1">
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="8*"/>
+                    <RowDefinition Height="1*"/>
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="1" Margin="10" BorderBrush="Transparent" Background="Transparent" BorderThickness="5">
+                    <TextBlock Name="MyOutputBlock" Background="Transparent" FontFamily="Consolas" FontSize="30" Margin="10"/>
                 </Border>
             </Grid>
 
             <!-- INPUT AREA -->
-            <Grid Grid.Column="1">
+            <Grid Grid.Column="0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="1*"/>
                     <RowDefinition Height="8*"/>
